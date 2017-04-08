@@ -126,7 +126,8 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __USADA8(uint32_t op
 #define TARGET_MAX 50 //size of target buffer - max number of targets to store
 #define TARGET_BLANK 300 //number of initial correlation samples to ignore  - at some point make this a function of the pulse amp and type of chirp
 #define TARGET_THRESHOLD 100
-uint32_t memsbuffer0[BLOCK_SIZE], memsbuffer1[BLOCK_SIZE];
+uint32_t memsbuffer0[BLOCK_SIZE];
+uint32_t memsbuffer1[BLOCK_SIZE];
 volatile uint16_t memsbuffer_i;
 volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
 
@@ -153,11 +154,12 @@ volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 
 volatile int16_t target_threshold=TARGET_THRESHOLD;
 
 
-
+//__attribute__((section (".m_data_1FFF0000")))
 
 uint16_t timestamp=0; //time stamp used to indicate the frame
 int16_t  corr_calc0,corr_calc1, corr_calc2, corr_calc3;
-int16_t corr0[CORR_SIZE],corr1[CORR_SIZE];
+int16_t corr0[CORR_SIZE] __attribute__((section (".m_data_1FFF0000")));
+int16_t corr1[CORR_SIZE] __attribute__((section (".m_data_1FFF0000")));
 int32_t corr_DC;
 uint16_t corr_i;
 
@@ -199,6 +201,7 @@ volatile uint8_t output_flag=1;
 #define PIN_PTC2 0x0004
 #define PIN_PTC3 0x0008
 #define PIN_PTC7 0x0080
+
 
 
 void PIT0_Int(void)

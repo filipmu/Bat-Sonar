@@ -3,7 +3,7 @@
   <Header>
     <Name>sonar</Name>
     <SavedBy>Filip</SavedBy>
-    <ModificationStamp>76</ModificationStamp>
+    <ModificationStamp>81</ModificationStamp>
     <Date>2017-01-17</Date>
     <IDE>Eclipse IDE</IDE>
     <PEversion>1.12.2.RT7_b1550-0615</PEversion>
@@ -7835,7 +7835,7 @@
         <ItemState>
           <ItemSymbol>InitializationState</ItemSymbol>
           <ReadOnly>false</ReadOnly>
-          <Value>Defaul_PE_initialization</Value>
+          <Value>User_PE_initialization</Value>
           <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         </ItemState>
         <ItemState>
@@ -8125,7 +8125,7 @@
         <ItemState>
           <ItemSymbol>C_RomRamPhysicalType3</ItemSymbol>
           <ReadOnly>false</ReadOnly>
-          <Value>FLASH</Value>
+          <Value>RAM</Value>
           <ItemWasNeverEnabledInChgScript>true</ItemWasNeverEnabledInChgScript>
         </ItemState>
         <ItemState>
