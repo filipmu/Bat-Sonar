@@ -31,6 +31,7 @@
 #include "Cpu.h"
 #include "Events.h"
 #include "Pins1.h"
+#include "INT_DMA4.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -103,6 +104,17 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __USADA8(uint32_t op
   return(result);
 }
 
+
+//RBIT
+//Reverse bit order of value
+
+__attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
+{
+  uint32_t result;
+   __ASM volatile ("rbit %0, %1" : "=r" (result) : "r" (value) );
+  return(result);
+}
+
 /*
  * Notes
  *
@@ -128,7 +140,9 @@ __attribute__( ( always_inline ) ) __STATIC_INLINE uint32_t __USADA8(uint32_t op
 #define TARGET_THRESHOLD 100
 uint32_t memsbuffer0[BLOCK_SIZE];
 uint32_t memsbuffer1[BLOCK_SIZE];
-volatile uint16_t memsbuffer_i;
+uint32_t memsbuffer2[BLOCK_SIZE];
+uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
+volatile uint16_t memsbuffer_i, memsbuffer_i16;
 volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
 
 uint8_t state=0;
@@ -244,13 +258,112 @@ void PIT0_Int(void)
 }
 
 
+void SPI0_Int(void)
+{
+uint16_t buff;
+
+	//clear interrupt flag
+	//Clear the end of queue flag
+	SPI0_SR=SPI0_SR | SPI_SR_EOQF_MASK;
+
+
+
+if(SPI0_SR | SPI_SR_RFDF_MASK) //check for read buffer flag
+{
+	buff=(uint16_t) SPI0_POPR;
+	if(memsbuffer_i16 < BLOCK_SIZE*2)
+		{
+		memsbuffer2_16[memsbuffer_i16]=buff;
+
+
+		//add a loop to load more than one in case - need to check size of FIFO
+		//SPI0_SR bits 7-4
+		memsbuffer_i16 = memsbuffer_i16 +1;
+		}
+	else
+	{
+
+		//flush buffers and halt SPI
+		//SPI0_MCR = SPI0_MCR | (SPI_MCR_CLR_RXF_MASK | SPI_MCR_HALT_MASK);
+	}
+	SPI0_SR=SPI0_SR | SPI_SR_RFDF_MASK;
+
+	if(SPI0_SR | SPI_SR_TFFF_MASK) //check for read buffer flag
+		{
+		//fill output buffer
+			//indicate that not at end of transfer
+			//indicate continuous chip select enable for continuous transfer
+			SPI0_PUSHR = SPI_PUSHR_CONT_MASK;
+
+			SPI0_SR=SPI0_SR | SPI_SR_TFFF_MASK;
+		}
+
+	}
+
+
+
+
+}
+
+
+void SPI0_slave_Int(void)
+{
+uint32_t buff;
+
+	//clear interrupt flag
+	//Clear the end of queue flag
+	SPI0_SR=SPI0_SR | SPI_SR_EOQF_MASK;
+
+	//fill output buffer
+		//indicate that not at end of transfer
+		//indicate continuous chip select enable for continuous transfer
+		//SPI0_PUSHR = SPI_PUSHR_CONT_MASK;
+
+if(SPI0_SR | SPI_SR_RFDF_MASK) //check for read buffer flag
+{
+	buff=(uint16_t) SPI0_POPR;
+	if(memsbuffer_i16 < BLOCK_SIZE*2)
+		{
+		memsbuffer2_16[memsbuffer_i16]=__RBIT(buff) >> 16;  //flip order of bits since can only load MSB first with slave SPI
+
+
+		//add a loop to load more than one in case - need to check size of FIFO
+		//SPI0_SR bits 7-4
+		memsbuffer_i16 = memsbuffer_i16 +1;
+		}
+	else
+	{
+
+		//flush buffers and halt SPI
+		SPI0_MCR = SPI0_MCR | (SPI_MCR_CLR_RXF_MASK | SPI_MCR_HALT_MASK);
+	}
+	SPI0_SR=SPI0_SR | SPI_SR_RFDF_MASK;
+
+	//if(SPI0_SR | SPI_SR_TFFF_MASK) //check for read buffer flag
+	//	{
+		//fill output buffer
+			//indicate that not at end of transfer
+			//indicate continuous chip select enable for continuous transfer
+	//		SPI0_PUSHR = SPI_PUSHR_CONT_MASK;
+
+	//		SPI0_SR=SPI0_SR | SPI_SR_TFFF_MASK;
+	//	}
+
+	}
+
+
+
+
+}
+
+
 
 void I2S_Int(void)
 {
 
 	uint32_t buff0,buff1;
 	//GPIOC_PSOR = PIN_PTC7; //set pin 7
-	//I2S0_RCSR|=0x40000; //clear error flag
+	I2S0_RCSR|=0x40000; //clear error flag
 
 
 	buff0 = I2S0_RDR0;
@@ -272,8 +385,95 @@ void I2S_Int(void)
 	//GPIOC_PCOR = PIN_PTC7; //clear pin 7
 }
 
+void DMA4_Int(void)
+{
+//DMA4 complete
+	//flush buffers and halt SPI
+	SPI0_MCR = SPI0_MCR | (SPI_MCR_CLR_RXF_MASK | SPI_MCR_HALT_MASK);
+
+}
 
 
+
+
+void DMA_Chan_Init(void)
+{
+  SIM_SCGC6 |= SIM_SCGC6_DMAMUX_MASK; //0x06; // enable the clock of DMAMUX module
+  SIM_SCGC7 |= SIM_SCGC7_DMA_MASK; //0x02; // enable eDMA peripheral clock
+
+  //DMA_CR |= DMA_CR_EMLM_MASK; // Activate the Minor Loop Mapping Mode for the DMA: set of the EMLM bit - allows minor loop end offsets
+
+
+  DMA_CR |= DMA_CR_EDBG_MASK; // activate debug mode for the DMA (avoids DMA errors while debugging)
+
+
+  DMA_DCHPRI4 = 0x00; //set priority of DMA channel4
+
+  DMAMUX_CHCFG4 = 0x00; // clears DMAmux channel4 and prepare it for the reconfiguration
+
+  // DMA Source address configuration
+  DMA_TCD4_SADDR = (uint32_t)(&SPI0_POPR); // Source address: SPI0, RX channel 0
+
+  DMA_TCD4_SOFF = 0x02; // Offset is 2 because we want to increment by 2 bytes after every basic transfer
+
+  DMA_TCD4_ATTR = DMA_ATTR_SSIZE(1)| DMA_ATTR_DSIZE(1); //16-bits transfer, both for source and destination transactions
+  DMA_TCD4_ATTR &= ~(DMA_ATTR_SMOD_MASK);  //clear Source modulus
+  DMA_TCD4_ATTR |= DMA_ATTR_SMOD(1);  //set the modulus to 2^1 so that source loops around after 2 bytes
+
+  DMA_TCD4_NBYTES_MLNO = DMA_NBYTES_MLNO_NBYTES(2);  //minor loop counter number of bytes
+
+  //DMA_TCD4_NBYTES_MLOFFYES |= DMA_NBYTES_MLOFFYES_SMLOE_MASK; // Source Minor Loop Offset Enable (to loop to start in minor loopP
+  //DMA_TCD4_NBYTES_MLOFFYES &= ~(DMA_NBYTES_MLOFFYES_MLOFF_MASK);  //clear MLOFF
+  //DMA_TCD4_NBYTES_MLOFFYES |= DMA_NBYTES_MLOFFYES_MLOFF(-2);  //go back 2 to start at the beginning of the source in minor loop
+  //DMA_TCD4_NBYTES_MLOFFYES &= ~(DMA_NBYTES_MLOFFYES_NBYTES_MASK);  //clear the number of byte
+  //DMA_TCD4_NBYTES_MLOFFYES |= DMA_NBYTES_MLOFFYES_NBYTES(0x02);  //set the number of bytes to 2 for the transfer
+
+  DMA_TCD4_SLAST = DMA_SLAST_SLAST(0);  //since the source uses a modulus, it does not need to be reset back
+
+  // DMA destination address configuration
+  DMA_TCD4_DADDR = (uint32_t)(&memsbuffer2[0]); // destination address
+  DMA_TCD4_DOFF = 0x02; // Destination address increment in bytes (16 bit => 2 bytes)
+
+  // Current Major Iteration Count; decremented each time the minor loop is completed
+  DMA_TCD4_CITER_ELINKNO = BLOCK_SIZE*2;
+
+  // Starting Major Iteration Count; when the software loads the TCD, this field
+  // must be set equal to the corresponding CITER field. Otherwise, a configuration error is reported.
+  DMA_TCD4_BITER_ELINKNO = BLOCK_SIZE*2;
+
+  // Destination last address adjustment or the memory address for the next
+  // transfer control descriptor to be loaded into this channel.
+  DMA_TCD4_DLASTSGA = DMA_DLAST_SGA_DLASTSGA(-(BLOCK_SIZE*4));
+
+  // TCD Control and Status: clear all flags and prepare it for the reconfiguration
+  DMA_TCD4_CSR = 0x00;
+  // enable DMA channel4 Major Loop Complete interrupt
+  DMA_TCD4_CSR |= DMA_CSR_INTMAJOR_MASK;
+
+  // DMA request input signals and this enable request flag must be asserted before a
+  // channel’s hardware service request is accepted.
+  DMA_ERQ |= DMA_ERQ_ERQ4_MASK; // enable DMA channel4
+
+  //set the priority of DMA channel4 interrupt
+  DMAMUX_CHCFG4 = DMAMUX_CHCFG_ENBL_MASK|DMAMUX_CHCFG_SOURCE(14); // enable DMAmux1 for SPI0 Receive (14), SPI1 is 16, SPI2 is 17
+
+  //will need to create DMA to write to SPI transmit buffer to trigger SPI  - will need to use channel linking to another channel
+
+  //can try DMA on RAM just to make sure it works
+
+  //will need to do the transfer in 512 byte increments - use the DMA complete interrupt to reset and count the transfers
+
+  /*
+   * Set DMA counts. Clear SPI read stack.  Push something into the SPI transmit stack to start process
+   * DMA triggered by SPI read - read and transfer data to memory.  Link to another DMA
+   * DMA linked - write data to SPI transmit stack to continue process
+   * DMA counts down till complete and then halts
+   *
+   */
+
+
+
+}
 
 
 
@@ -518,10 +718,16 @@ int main(void)
     DAC0_C2 = (DAC_C2_DACBFRP(2) | DAC_C2_DACBFUP(2));
 
 
+    //DMA_Chan_Init();  //enable DMA for SPI0.  Do before SPI init
 
+    //enable the SPI
 
   /* Write your code here */
   /* For example: for(;;) { } */
+
+    SPI0_Init();
+    //SPI1_Init();
+    //SPI2_Init();
 
     I2S0_Init();
     PIT_Init();
@@ -652,6 +858,27 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 		  //output one on timing pin for mems capture
 		  GPIOC_PSOR= PIN_PTC3;
+
+
+		  //start mems microphone data collection on SPI for microphone #2
+
+			  memsbuffer_i16=0;
+		  //clear input buffer
+		      SPI0_MCR = SPI0_MCR | SPI_MCR_CLR_RXF_MASK;
+
+		      //fill output buffer
+		      //indicate that not at end of transfer
+		      //indicate continuous chip select enable for continuous transfer
+		      //SPI0_PUSHR = SPI_PUSHR_CONT_MASK;
+
+		      //Clear the end of queue flag
+		      SPI0_SR = SPI0_SR | SPI_SR_EOQF_MASK;
+
+
+
+
+
+
 	  //start the chirp and mems microphone data collection
 		  memsbuffer_i=0;
 
@@ -659,6 +886,11 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 	      I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_FRF_MASK | I2S_RCSR_BCE_MASK;
 	      //enable I2S receive transfer, interrupts, bit clock on
 	      I2S0_RCSR =  I2S_RCSR_RE_MASK | I2S_RCSR_BCE_MASK | I2S_RCSR_DBGE_MASK | I2S_RCSR_FRIE_MASK;
+
+	      //start SPI read transfer
+	      SPI0_MCR = SPI0_MCR & (~SPI_MCR_HALT_MASK);
+
+
 	      //reset counter
 	      PIT_LDVAL0 = chirp_count;
 	      //reset chirp pulses
@@ -672,25 +904,19 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 	      corr_i=0;
 
 	      target_i=0;
+
+
 	      state=2;
+
 	  }
 
 
-/*  candiate for deletion
 
 
-	  if(state == 1)   //check if the chirp is complete
-			  {
-		  	  if((PIT_TCTRL0 & PIT_TCTRL_TEN_MASK) == 0)
-		  	  //if(chirp_pulses_counter == 0)
 
-			  	state=2;
-		  		  //state = 0;
-			  }
-*/
 
 	  //check if the data load is complete
-	  if(memsbuffer_i == BLOCK_SIZE)
+	  if(memsbuffer_i16 == BLOCK_SIZE*2)
 		  {
 		 GPIOC_PCOR = PIN_PTC3; //clear pin 3
 		// state=3; //debug
@@ -708,6 +934,11 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
           //start processing the correlation since we have at least a full chirp length plus buffer ahead of us to process
 		  GPIOC_PSOR= PIN_PTC2;  //make pin 2 high to indicate starting
 
+		  //check how much timing changes after data loaded
+		  if(corr_i & 0x100)
+			  GPIOC_PSOR = PIN_PTC7; //set pin 7
+		  else
+			  GPIOC_PCOR = PIN_PTC7; //clear pin 7
 
 
 
@@ -1118,7 +1349,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  //do some post processing
 		  //fine grain correlation for microphone 0
 
-		  GPIOC_PSOR = PIN_PTC7; //set pin 7
+		 // GPIOC_PSOR = PIN_PTC7; //set pin 7
 		  target_i=TARGET_MAX-1;
 
 		  while(target_i>=0 && target_d[target_i]>0)
