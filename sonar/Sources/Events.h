@@ -34,7 +34,7 @@
 #include "PE_Const.h"
 #include "IO_Map.h"
 #include "Pins1.h"
-#include "INT_DMA4.h"
+#include "INT_DMA5.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -31,7 +31,7 @@
 #include "Cpu.h"
 #include "Events.h"
 #include "Pins1.h"
-#include "INT_DMA4.h"
+#include "INT_DMA5.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -138,9 +138,9 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 #define TARGET_MAX 50 //size of target buffer - max number of targets to store
 #define TARGET_BLANK 300 //number of initial correlation samples to ignore  - at some point make this a function of the pulse amp and type of chirp
 #define TARGET_THRESHOLD 100
-uint32_t memsbuffer0[BLOCK_SIZE];
-uint32_t memsbuffer1[BLOCK_SIZE];
-uint32_t memsbuffer2[BLOCK_SIZE];
+uint32_t memsbuffer0[BLOCK_SIZE+1];//+1 because DMA can overshoot
+uint32_t memsbuffer1[BLOCK_SIZE+1];
+uint32_t memsbuffer2[BLOCK_SIZE+1];
 uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
 volatile uint16_t memsbuffer_i, memsbuffer_i16;
 volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
@@ -204,7 +204,7 @@ int32_t j,ind,indl,indr;
 int8_t sign,sign_last,delta_sign;
 uint32_t ct, cum_ct,loop;
 
-
+volatile uint32_t icount;
 
 
 int16_t m0_max,m1_max, m0_max_loc, m1_max_loc;
@@ -385,12 +385,32 @@ void I2S_Int(void)
 	//GPIOC_PCOR = PIN_PTC7; //clear pin 7
 }
 
-void DMA4_Int(void)
+void DMA5_Int(void)
 {
-//DMA4 complete
-	//flush buffers and halt SPI
-	SPI0_MCR = SPI0_MCR | (SPI_MCR_CLR_RXF_MASK | SPI_MCR_HALT_MASK);
+//DMA5 complete
 
+	//clear interrupt
+
+	DMA_CINT = 0x05; // Clear interrupt for channel 5
+
+
+	//disable, reset fifos, turn off DMA, but keeps bit clock on
+	//I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_BCE_MASK| I2S_RCSR_DBGE_MASK;
+	I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_BCE_MASK;
+
+
+
+	//Disable DMA
+	//DMA_ERQ &= (~DMA_ERQ_ERQ4_MASK); // disable DMA channel4
+	DMA_CERQ = 0x04;
+
+
+	// DMA destination address configuration
+	  // DMA destination address configuration
+	//  DMA_TCD4_DADDR = (uint32_t)(&memsbuffer0[0]); // destination address
+	//  DMA_TCD5_DADDR = (uint32_t)(&memsbuffer1[0]); // destination address
+	//  DMA_TCD5_CITER_ELINKNO = BLOCK_SIZE;
+	  state=3;
 }
 
 
@@ -404,23 +424,34 @@ void DMA_Chan_Init(void)
   //DMA_CR |= DMA_CR_EMLM_MASK; // Activate the Minor Loop Mapping Mode for the DMA: set of the EMLM bit - allows minor loop end offsets
 
 
-  DMA_CR |= DMA_CR_EDBG_MASK; // activate debug mode for the DMA (avoids DMA errors while debugging)
+ // DMA_CR |= DMA_CR_EDBG_MASK; // activate debug mode for the DMA (avoids DMA errors while debugging)
 
 
-  DMA_DCHPRI4 = 0x00; //set priority of DMA channel4
+  DMA_DCHPRI4 = 0x04; //set priority of DMA channel4 (uses default value)
+  DMA_DCHPRI5 = 0x05; //set priority of DMA channel5 higher than 4 (so that it starts before ch4 starts, finish the second I2S channel
 
   DMAMUX_CHCFG4 = 0x00; // clears DMAmux channel4 and prepare it for the reconfiguration
+  DMAMUX_CHCFG5 = 0x00; // clears DMAmux channel5 and prepare it for the reconfiguration
 
   // DMA Source address configuration
-  DMA_TCD4_SADDR = (uint32_t)(&SPI0_POPR); // Source address: SPI0, RX channel 0
+  DMA_TCD4_SADDR = (uint32_t)(&I2S0_RDR0); // Source address: I2S, RX channel 0
+  DMA_TCD5_SADDR = (uint32_t)(&I2S0_RDR1); // Source address: I2S, RX channel 1
 
-  DMA_TCD4_SOFF = 0x02; // Offset is 2 because we want to increment by 2 bytes after every basic transfer
+  DMA_TCD4_SOFF = 0x00; // Offset is 4 because we want to increment by 4 bytes after every basic transfer
+  DMA_TCD5_SOFF = 0x00; // Offset is 4 because we want to increment by 4 bytes after every basic transfer
 
-  DMA_TCD4_ATTR = DMA_ATTR_SSIZE(1)| DMA_ATTR_DSIZE(1); //16-bits transfer, both for source and destination transactions
-  DMA_TCD4_ATTR &= ~(DMA_ATTR_SMOD_MASK);  //clear Source modulus
-  DMA_TCD4_ATTR |= DMA_ATTR_SMOD(1);  //set the modulus to 2^1 so that source loops around after 2 bytes
 
-  DMA_TCD4_NBYTES_MLNO = DMA_NBYTES_MLNO_NBYTES(2);  //minor loop counter number of bytes
+  DMA_TCD4_ATTR = DMA_ATTR_SSIZE(2)| DMA_ATTR_DSIZE(2); //32-bits transfer, both for source and destination transactions
+  //DMA_TCD4_ATTR &= ~(DMA_ATTR_SMOD_MASK);  //clear Source modulus
+  //DMA_TCD4_ATTR |= DMA_ATTR_SMOD(2);  //set the modulus to 2^2 so that source loops around after 4 bytes
+
+  DMA_TCD5_ATTR = DMA_ATTR_SSIZE(2)| DMA_ATTR_DSIZE(2); //32-bits transfer, both for source and destination transactions
+  //DMA_TCD5_ATTR &= ~(DMA_ATTR_SMOD_MASK);  //clear Source modulus
+  //DMA_TCD5_ATTR |= DMA_ATTR_SMOD(2);  //set the modulus to 2^2 so that source loops around after 4 bytes
+
+
+  DMA_TCD4_NBYTES_MLNO = DMA_NBYTES_MLNO_NBYTES(4);  //minor loop counter number of bytes
+  DMA_TCD5_NBYTES_MLNO = DMA_NBYTES_MLNO_NBYTES(4);  //minor loop counter number of bytes
 
   //DMA_TCD4_NBYTES_MLOFFYES |= DMA_NBYTES_MLOFFYES_SMLOE_MASK; // Source Minor Loop Offset Enable (to loop to start in minor loopP
   //DMA_TCD4_NBYTES_MLOFFYES &= ~(DMA_NBYTES_MLOFFYES_MLOFF_MASK);  //clear MLOFF
@@ -429,41 +460,77 @@ void DMA_Chan_Init(void)
   //DMA_TCD4_NBYTES_MLOFFYES |= DMA_NBYTES_MLOFFYES_NBYTES(0x02);  //set the number of bytes to 2 for the transfer
 
   DMA_TCD4_SLAST = DMA_SLAST_SLAST(0);  //since the source uses a modulus, it does not need to be reset back
+  DMA_TCD5_SLAST = DMA_SLAST_SLAST(0);  //since the source uses a modulus, it does not need to be reset back
 
   // DMA destination address configuration
-  DMA_TCD4_DADDR = (uint32_t)(&memsbuffer2[0]); // destination address
-  DMA_TCD4_DOFF = 0x02; // Destination address increment in bytes (16 bit => 2 bytes)
+  DMA_TCD4_DADDR = (uint32_t)(&memsbuffer0[0]); // destination address
+  DMA_TCD5_DADDR = (uint32_t)(&memsbuffer1[0]); // destination address
+
+  DMA_TCD4_DOFF = 0x04; // Destination address increment in bytes (32 bit => 4 bytes)
+  DMA_TCD5_DOFF = 0x04; // Destination address increment in bytes (32 bit => 4 bytes)
+
+
+  DMA_TCD4_CITER_ELINKYES =DMA_CITER_ELINKYES_LINKCH(5);  //identify linked channel
+  DMA_TCD4_CITER_ELINKYES |= DMA_CITER_ELINKYES_ELINK_MASK;  //enable linking channels
+  DMA_TCD4_CITER_ELINKYES |= DMA_CITER_ELINKYES_CITER(1);  //set maximum number of transfers
 
   // Current Major Iteration Count; decremented each time the minor loop is completed
-  DMA_TCD4_CITER_ELINKNO = BLOCK_SIZE*2;
+  DMA_TCD5_CITER_ELINKNO = BLOCK_SIZE;
 
   // Starting Major Iteration Count; when the software loads the TCD, this field
   // must be set equal to the corresponding CITER field. Otherwise, a configuration error is reported.
-  DMA_TCD4_BITER_ELINKNO = BLOCK_SIZE*2;
+  DMA_TCD4_BITER_ELINKYES =DMA_BITER_ELINKYES_LINKCH(5);  //identify linked channel
+  DMA_TCD4_BITER_ELINKYES |= DMA_BITER_ELINKYES_ELINK_MASK;  //enable linking channels
+  DMA_TCD4_BITER_ELINKYES |= DMA_BITER_ELINKYES_BITER(1);  //set maximum number of transfers to 1 - will use ch 5 to keep count
+
+  DMA_TCD5_BITER_ELINKNO = BLOCK_SIZE;
 
   // Destination last address adjustment or the memory address for the next
   // transfer control descriptor to be loaded into this channel.
-  DMA_TCD4_DLASTSGA = DMA_DLAST_SGA_DLASTSGA(-(BLOCK_SIZE*4));
+  DMA_TCD4_DLASTSGA = DMA_DLAST_SGA_DLASTSGA(0);
+  DMA_TCD5_DLASTSGA = DMA_DLAST_SGA_DLASTSGA(-(BLOCK_SIZE*4));
+
 
   // TCD Control and Status: clear all flags and prepare it for the reconfiguration
-  DMA_TCD4_CSR = 0x00;
-  // enable DMA channel4 Major Loop Complete interrupt
-  DMA_TCD4_CSR |= DMA_CSR_INTMAJOR_MASK;
+  DMA_TCD4_CSR = DMA_CSR_MAJORELINK_MASK;  //enable linking for major loop of ch4 - to catch last one (may not need minor linking)
+  DMA_TCD5_CSR = 0;
 
-  // DMA request input signals and this enable request flag must be asserted before a
-  // channel’s hardware service request is accepted.
-  DMA_ERQ |= DMA_ERQ_ERQ4_MASK; // enable DMA channel4
+  //Set up link
+  DMA_TCD4_CSR |=DMA_CSR_MAJORLINKCH(5);
 
-  //set the priority of DMA channel4 interrupt
-  DMAMUX_CHCFG4 = DMAMUX_CHCFG_ENBL_MASK|DMAMUX_CHCFG_SOURCE(14); // enable DMAmux1 for SPI0 Receive (14), SPI1 is 16, SPI2 is 17
+  // enable DMA channel5 Major Loop Complete interrupt
+  DMA_TCD5_CSR |= DMA_CSR_INTMAJOR_MASK;
 
-  //will need to create DMA to write to SPI transmit buffer to trigger SPI  - will need to use channel linking to another channel
+ // DMA_TCD5_CSR |= DMA_CSR_DREQ_MASK; //Clear channel's ERQ bit when major loop is complete
 
-  //can try DMA on RAM just to make sure it works
+  //clear error flags
+  DMA_ERR = 0x30;  //clears errors on DMA5 and DMA4
 
-  //will need to do the transfer in 512 byte increments - use the DMA complete interrupt to reset and count the transfers
+
+  //set the source of DMA channel4 interrupt
+  DMAMUX_CHCFG4 = DMAMUX_CHCFG_ENBL_MASK|DMAMUX_CHCFG_SOURCE(12); // enable DMAmux4 for I2S receive (12),  for SPI0 Receive (14), SPI1 is 16, SPI2 is 17
+
+  //set the source of DMA channel5 interrupt
+    DMAMUX_CHCFG5 = DMAMUX_CHCFG_ENBL_MASK|DMAMUX_CHCFG_SOURCE(0); // enable DMAmux5 for I2S transmit (13) - but we will not use this HW signal (will not enable ERQ)
+
+    // DMA request input signals and this enable request flag must be asserted before a
+    // channel’s hardware service request is accepted.
+    //DMA_ERQ |= DMA_ERQ_ERQ4_MASK; // enable DMA channel4  //wait to enable it until needed
+    //DMA_ERQ |= DMA_ERQ_ERQ5_MASK; // enable DMA channel5 - do not need to since there is no HW request for this channel
+
+
 
   /*
+   * Approach for I2S using 2 DMA channels - done so that 2nd channel can keep track of full transfer
+   * Set DMA counts.  Clear I2S read stack.
+   * DMA triggered by I2S receive.
+   * DMA reads and transfers channel 0 data.  major loop is only 1 32 bit word
+   * DMA triggers a second DMA (linked at major loop, minor loop would limit size of transfer to 511)
+   * second DMA reads and transfers channel 1 data - major loop is full BLOCKSIZE
+   * interrupt on second DMA needs to reset the first DMA
+   *
+   *
+   * Approach for SPI (not used)
    * Set DMA counts. Clear SPI read stack.  Push something into the SPI transmit stack to start process
    * DMA triggered by SPI read - read and transfer data to memory.  Link to another DMA
    * DMA linked - write data to SPI transmit stack to continue process
@@ -718,19 +785,22 @@ int main(void)
     DAC0_C2 = (DAC_C2_DACBFRP(2) | DAC_C2_DACBFUP(2));
 
 
-    //DMA_Chan_Init();  //enable DMA for SPI0.  Do before SPI init
 
-    //enable the SPI
+
+
 
   /* Write your code here */
   /* For example: for(;;) { } */
 
-    SPI0_Init();
+    //enable the SPI
+    //SPI0_Init();
     //SPI1_Init();
     //SPI2_Init();
 
     I2S0_Init();
     PIT_Init();
+    DMA_Chan_Init();  //enable DMA for I2S
+
 
 
 
@@ -859,37 +929,47 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  //output one on timing pin for mems capture
 		  GPIOC_PSOR= PIN_PTC3;
 
-
+		  /*
 		  //start mems microphone data collection on SPI for microphone #2
-
-			  memsbuffer_i16=0;
-		  //clear input buffer
-		      SPI0_MCR = SPI0_MCR | SPI_MCR_CLR_RXF_MASK;
-
-		      //fill output buffer
-		      //indicate that not at end of transfer
-		      //indicate continuous chip select enable for continuous transfer
-		      //SPI0_PUSHR = SPI_PUSHR_CONT_MASK;
-
-		      //Clear the end of queue flag
-		      SPI0_SR = SPI0_SR | SPI_SR_EOQF_MASK;
-
+		  memsbuffer_i16=0;
+		  SPI0_MCR = SPI0_MCR | SPI_MCR_CLR_RXF_MASK;  //clear input buffer
+		  SPI0_SR = SPI0_SR | SPI_SR_EOQF_MASK; //Clear the end of queue flag
+		  */
 
 
 
 
 
 	  //start the chirp and mems microphone data collection
-		  memsbuffer_i=0;
 
+		  //memsbuffer_i=0; //reset index used by mems data load interrupt (not needed for DMA)
+
+
+		  //Interrupt driven data load settings
 	      //reset I2S fifo, interrupts, errors, but keeps bit clock on
-	      I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_FRF_MASK | I2S_RCSR_BCE_MASK;
+	      //I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_FRF_MASK | I2S_RCSR_BCE_MASK;
 	      //enable I2S receive transfer, interrupts, bit clock on
-	      I2S0_RCSR =  I2S_RCSR_RE_MASK | I2S_RCSR_BCE_MASK | I2S_RCSR_DBGE_MASK | I2S_RCSR_FRIE_MASK;
+	      //I2S0_RCSR =  I2S_RCSR_RE_MASK | I2S_RCSR_BCE_MASK | I2S_RCSR_DBGE_MASK | I2S_RCSR_FRIE_MASK;
 
 	      //start SPI read transfer
-	      SPI0_MCR = SPI0_MCR & (~SPI_MCR_HALT_MASK);
+	      //SPI0_MCR = SPI0_MCR & (~SPI_MCR_HALT_MASK);
 
+		  DMA_TCD4_DADDR = (uint32_t)(&memsbuffer0[0]); // destination address
+		  DMA_TCD5_DADDR = (uint32_t)(&memsbuffer1[0]); // destination address
+		  DMA_TCD5_CITER_ELINKNO = BLOCK_SIZE;
+
+		  DMA_SERQ = 0x04;  // enable DMA channel4
+	      //DMA_ERQ |= DMA_ERQ_ERQ4_MASK; // enable DMA channel4
+	      //DMA_ERQ |= DMA_ERQ_ERQ5_MASK; // enable DMA channel5
+	      //start DMA channel 4, which will be triggered by I2S receive for a minor loop
+	     // DMA_SSRT = DMA_SSRT_SSRT(4);
+
+		  //DMA driven data load settings
+		  //reset I2S fifo, DMA, errors, but keeps bit clock on
+		  I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_FRF_MASK | I2S_RCSR_BCE_MASK;
+		  //enable I2S receive transfer, DMA, bit clock on
+		  //I2S0_RCSR =  I2S_RCSR_RE_MASK | I2S_RCSR_BCE_MASK | I2S_RCSR_DBGE_MASK | I2S_RCSR_FRDE_MASK;
+		  I2S0_RCSR =  I2S_RCSR_RE_MASK   | I2S_RCSR_FRDE_MASK;
 
 	      //reset counter
 	      PIT_LDVAL0 = chirp_count;
@@ -916,29 +996,31 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 
 	  //check if the data load is complete
-	  if(memsbuffer_i16 == BLOCK_SIZE*2)
-		  {
-		 GPIOC_PCOR = PIN_PTC3; //clear pin 3
+	 // if(memsbuffer_i16 == BLOCK_SIZE*2)
+		//  {
+		// GPIOC_PCOR = PIN_PTC3; //clear pin 3
 		// state=3; //debug
 
-		  }
+		//  }
 
 	  //if(state < 4 && state > 1)
-	  if(state ==2)
+	  if((state ==2) || (state==3))
 	  {
 
-
-
-		  if (((corr_i+chirp_len) <= (memsbuffer_i)))
-		  {
-          //start processing the correlation since we have at least a full chirp length plus buffer ahead of us to process
-		  GPIOC_PSOR= PIN_PTC2;  //make pin 2 high to indicate starting
-
 		  //check how much timing changes after data loaded
-		  if(corr_i & 0x100)
+		  if(DMA_TCD5_CITER_ELINKNO & 0x100)
 			  GPIOC_PSOR = PIN_PTC7; //set pin 7
 		  else
 			  GPIOC_PCOR = PIN_PTC7; //clear pin 7
+
+
+		 // if (((corr_i+chirp_len) <= (memsbuffer_i)))  //start processing the correlation since we have at least a full chirp length plus buffer ahead of us to process
+		  if (((corr_i+chirp_len) <= (BLOCK_SIZE-DMA_TCD5_CITER_ELINKNO)) || (state == 3))	 //start processing the correlation since we have at least a full chirp length plus buffer ahead of us to process
+
+		  {
+
+		  GPIOC_PSOR= PIN_PTC2;  //make pin 2 high to indicate starting
+
 
 
 
@@ -1556,6 +1638,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  else if(output_flag==2)
 		  {
 			  //printf("testcount0: %ld testcount1: %ld\r\n",testcount0,testcount1);
+
 		  }
 
 
@@ -1572,6 +1655,8 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 
 		  }
+
+	 // printf("CITER: %ld DMA4_DADDR: %ld DMA5_DADDR %ld\r\n",DMA_TCD5_CITER_ELINKNO,DMA_TCD4_DADDR-(uint32_t)(&memsbuffer0[0]),DMA_TCD5_DADDR-(uint32_t)(&memsbuffer1[0]));
 
   }
 

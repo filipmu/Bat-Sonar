@@ -56,6 +56,7 @@
   <FILES>
     <GeneratedCs>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Cpu.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\INT_DMA5.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PE_LDD.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Pins1.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Project_Settings\Startup_Code\startup.c</PathName>
@@ -63,6 +64,9 @@
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Sources\main.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\I2S0_Init.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\PIT_Init.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI0_Init.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI1_Init.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI2_Init.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\CPU_Init.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\Peripherals_Init.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\Vectors.c</PathName>
@@ -72,6 +76,7 @@
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Cpu.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\I2S0.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\I2S0_Config.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\INT_DMA5.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\IO_Map.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Init_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PE_Const.h</PathName>
@@ -81,6 +86,12 @@
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PIT.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PIT_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Pins1.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI0.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI0_Config.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI1.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI1_Config.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI2.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\SPI2_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Vectors_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Sources\Events.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Sources\cmsis_gcc.h</PathName>
@@ -127,6 +138,9 @@
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\PDD\WDOG_PDD.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\I2S0_Init.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\PIT_Init.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI0_Init.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI1_Init.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\Peripherals\SPI2_Init.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\CPU_Init.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\PDD_Includes.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Static_Code\System\Peripherals_Init.h</PathName>
