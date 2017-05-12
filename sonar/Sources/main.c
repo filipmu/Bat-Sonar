@@ -365,15 +365,30 @@ void I2S_Int(void)
 	I2S0_RCSR|=0x40000; //clear error flag
 
 
-	buff0 = I2S0_RDR0;
-	buff1 = I2S0_RDR1;
+	//buff0 = I2S0_RDR0;
+	//buff1 = I2S0_RDR1;
 
-	if(memsbuffer_i < BLOCK_SIZE)
+	if(memsbuffer_i < (BLOCK_SIZE-4))  //buffer of 5
 	{
-		memsbuffer0[memsbuffer_i]=buff0;
-		memsbuffer1[memsbuffer_i]=buff1;
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
 		memsbuffer_i = memsbuffer_i +1;
 
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
+		memsbuffer_i = memsbuffer_i +1;
+
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
+		memsbuffer_i = memsbuffer_i +1;
+
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
+		memsbuffer_i = memsbuffer_i +1;
+
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
+		memsbuffer_i = memsbuffer_i +1;
 	}
 	else
 	{
@@ -1468,7 +1483,9 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 		  }
 
+		  	  state=0;
 
+/*
 		  if (count<2)
 			  {
 			  count=count+1;
@@ -1478,8 +1495,9 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  {count = 0;
 			  state=0;  //done doing it 10 times
 
-			  }
 
+			  }
+*/
 
 		  }
 
