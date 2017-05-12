@@ -119,6 +119,7 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
  * Notes
  *
  * Be sure to set compiler optimization to a high setting for performance of code
+ *
 
 
 */
