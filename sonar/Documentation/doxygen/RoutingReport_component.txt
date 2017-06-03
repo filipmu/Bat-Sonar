@@ -352,11 +352,11 @@
 			</tr>
 			<tr>
 				<td>62</td><td>PTB16/SPI1_SOUT/UART0_RX/FTM_CLKIN0/FB_AD17/EWM_IN</td><td><small><i>same</i></small></td>
-				<td></td><td></td><td></td><td></td>
+				<td bgcolor='#90EE67'>UART0</td><td bgcolor='#90EE67'>uart_rx</td><td bgcolor='#90EE67'>alt3</td><td bgcolor='#90EE67'>Input</td>
 			</tr>
 			<tr>
 				<td>63</td><td>PTB17/SPI1_SIN/UART0_TX/FTM_CLKIN1/FB_AD16/EWM_OUT_b</td><td><small><i>same</i></small></td>
-				<td></td><td></td><td></td><td></td>
+				<td bgcolor='#90EE67'>UART0</td><td bgcolor='#90EE67'>uart_tx</td><td bgcolor='#90EE67'>alt3</td><td bgcolor='#90EE67'>Output</td>
 			</tr>
 			<tr>
 				<td>64</td><td>PTB18/CAN0_TX/FTM2_CH0/I2S0_TX_BCLK/FB_AD15/FTM2_QD_PHA</td><td><small><i>same</i></small></td>
@@ -2086,11 +2086,11 @@
 			</tr>
 			<tr>
 				<td>62</td><td>PTB16/SPI1_SOUT/UART0_RX/FTM_CLKIN0/FB_AD17/EWM_IN</td><td><small><i>same</i></small></td>
-				<td></td><td></td><td></td><td></td>
+				<td bgcolor='#90EE67'>UART0</td><td bgcolor='#90EE67'>uart_rx</td><td bgcolor='#90EE67'>alt3</td><td bgcolor='#90EE67'>Input</td>
 			</tr>
 			<tr>
 				<td>63</td><td>PTB17/SPI1_SIN/UART0_TX/FTM_CLKIN1/FB_AD16/EWM_OUT_b</td><td><small><i>same</i></small></td>
-				<td></td><td></td><td></td><td></td>
+				<td bgcolor='#90EE67'>UART0</td><td bgcolor='#90EE67'>uart_tx</td><td bgcolor='#90EE67'>alt3</td><td bgcolor='#90EE67'>Output</td>
 			</tr>
 			<tr>
 				<td>64</td><td>PTB18/CAN0_TX/FTM2_CH0/I2S0_TX_BCLK/FB_AD15/FTM2_QD_PHA</td><td><small><i>same</i></small></td>

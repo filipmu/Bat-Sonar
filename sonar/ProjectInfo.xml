@@ -56,7 +56,8 @@
   <FILES>
     <GeneratedCs>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Cpu.c</PathName>
-      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\INT_DMA5.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\CsIO1.c</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\IO1.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PE_LDD.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Pins1.c</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Project_Settings\Startup_Code\startup.c</PathName>
@@ -74,9 +75,10 @@
     <GeneratedHs>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\CPU_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Cpu.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\CsIO1.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\I2S0.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\I2S0_Config.h</PathName>
-      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\INT_DMA5.h</PathName>
+      <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\IO1.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\IO_Map.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\Init_Config.h</PathName>
       <PathName>C:\Users\Filip\Processor\Ultrasonic\K64 Sonar Git Rep\sonar\Generated_Code\PE_Const.h</PathName>

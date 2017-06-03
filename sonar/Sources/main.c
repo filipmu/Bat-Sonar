@@ -31,6 +31,8 @@
 #include "Cpu.h"
 #include "Events.h"
 #include "Pins1.h"
+#include "CsIO1.h"
+#include "IO1.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -40,6 +42,8 @@
 #include "Init_Config.h"
 /* User includes (#include below this line is not maintained by Processor Expert) */
 #include <stdio.h>
+
+
 
   #define __ASM            __asm                                      /*!< asm keyword for GNU Compiler */
   #define __INLINE         inline                                     /*!< inline keyword for GNU Compiler */
@@ -147,7 +151,7 @@ volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
 
 uint8_t state=0;
 
-
+volatile int16_t corr_out0, corr_out1;
 
 //Variables that control the chirp
 uint8_t chirp_add=CHIRP_ADD;
@@ -209,7 +213,8 @@ uint32_t ct, cum_ct,loop;
 int16_t m0_max,m1_max, m0_max_loc, m1_max_loc;
 
 
-volatile uint8_t output_flag=1;
+volatile uint8_t output_flag=2;
+
 
 #define PIN_PTC2 0x0004
 #define PIN_PTC3 0x0008
@@ -784,7 +789,6 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 
 
-
 		  //output one on timing pin for mems capture
 		  GPIOC_PSOR= PIN_PTC3;
 
@@ -958,6 +962,8 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  		  corr0[corr_i+2]=corr_calc2;
 		  		  corr0[corr_i+3]=corr_calc3;
 
+		  		  corr_out0=corr_calc0;
+
 		  		  /*
 				  if (corr_i > TARGET_BLANK)
 				  		  {
@@ -1094,6 +1100,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 				  corr1[corr_i+2]=corr_calc2;
 				  corr1[corr_i+3]=corr_calc3;
 
+				  corr_out1=corr_calc0;
 
 				  if (corr_i > TARGET_BLANK)
 				  		  {
@@ -1479,7 +1486,19 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  }
 		  else if(output_flag==2)
 		  {
-			  //printf("testcount0: %ld testcount1: %ld\r\n",testcount0,testcount1);
+
+			  //synchronize with Octave serial IO
+			  		  if(output_flag==2)
+			  			  while (fgetc(stdin) != '\r');
+
+				  fwrite(corr0, sizeof(corr0[0]),BLOCK_SIZE,stdout);
+				  fwrite(target_d,sizeof(target_d[0]),TARGET_MAX,stdout);
+				  fwrite(target_a,sizeof(target_a[0]),TARGET_MAX,stdout);
+				  fwrite(target_s,sizeof(target_s[0]),TARGET_MAX,stdout);
+				  fwrite(target_s1,sizeof(target_s1[0]),TARGET_MAX,stdout);
+
+				  fflush(stdout);
+
 
 		  }
 

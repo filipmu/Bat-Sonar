@@ -33,7 +33,7 @@ Module "SPI2"      (component Init_SPI_VAR0)
                 this method in user code to initialize the module. By default, the method is called by PE automatically; see 
                 "Call Init method" property of the component for more details.
 
-Module "INT_DMA5"  (component InterruptVector)
+Module "CsIO1"     (component ConsoleIO)
 
 Module "Cpu"       (component MK64FN1M0LL12)
 
