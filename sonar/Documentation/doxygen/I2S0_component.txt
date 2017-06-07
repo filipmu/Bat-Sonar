@@ -37,7 +37,7 @@ by the component.
 <td class="regNotResetVal">0x05000027</td>
  <td>I2S0_TCR2 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F088</td><td>I2S0_RCR2</td>
-<td class="regNotResetVal">0x0500000E</td>
+<td class="regNotResetVal">0x0700000E</td>
  <td>I2S0_RCR2 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F00C</td><td>I2S0_TCR3</td>
 <td class="regResetVal">0x00000000</td>
@@ -49,7 +49,7 @@ by the component.
 <td class="regResetVal">0x00000000</td>
  <td>I2S0_TCR4 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F090</td><td>I2S0_RCR4</td>
-<td class="regNotResetVal">0x00001F01</td>
+<td class="regNotResetVal">0x00071F01</td>
  <td>I2S0_RCR4 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F014</td><td>I2S0_TCR5</td>
 <td class="regNotResetVal">0x07070000</td>
@@ -511,14 +511,14 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F088</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x0500000E</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x0700000E</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>30 - 31</td><td>SYNC</td><td>0x00</td><td>Synchronous Mode</td>
 <tr><td>29</td><td>BCS</td><td>0x00</td><td>Bit Clock Swap</td>
 <tr><td>28</td><td>BCI</td><td>0x00</td><td>Bit Clock Input</td>
 <tr><td>26 - 27</td><td>MSEL</td><td>0x00</td><td>MCLK Select</td>
-<tr><td>25</td><td>BCP</td><td>0x00</td><td>Bit Clock Polarity</td>
+<tr><td>25</td><td>BCP</td><td>0x01</td><td>Bit Clock Polarity</td>
 <tr><td>24</td><td>BCD</td><td>0x01</td><td>Bit Clock Direction</td>
 <tr><td>0 - 7</td><td>DIV</td><td>0x00</td><td>Bit Clock Divide</td>
 </tr></table>
@@ -718,7 +718,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F090</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00001F01</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00071F01</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>16 - 20</td><td>FRSZ</td><td>0x00</td><td>Frame Size</td>
@@ -964,9 +964,9 @@ registers of the peripheral(s) configured by the component.
 **              Frame sync active state                    : High
 **              Frame sync initiated                       : first_bit_of_data
 **              Frame sync width [bits]                    : 32
-**              Frame size [words]                         : 1
+**              Frame size [words]                         : 8
 **              Shift direction                            : LSB first
-**              Data clocked in on                         : rising edge
+**              Data clocked in on                         : falling edge
 **              First bit shifted index                    : 0
 **              Word 0 width [bits]                        : 32
 **              Word N width [bits]                        : 32

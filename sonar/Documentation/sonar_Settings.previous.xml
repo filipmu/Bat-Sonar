@@ -271,7 +271,7 @@
             <Bit_clock_frequency v="4 MHz" />
             <Synchronous_mode v="Asynchronous" />
             <Bit_clock_swap v="no" />
-            <Bit_clock_input v="external" />
+            <Bit_clock_input v="internal" />
           </group>
         </group>
         <group name="Transmit configuration">
@@ -296,7 +296,7 @@
         <group name="Receive configuration">
           <Frame_sync_source_direction v="Internal" />
           <Frame_sync_active_state v="High" />
-          <Frame_sync_initiated v="one_bit_before_the_data" />
+          <Frame_sync_initiated v="first_bit_of_data" />
           <Frame_sync_width__bits_ v="32" />
           <Frame_size__words_ v="8" />
           <Shift_direction v="LSB first" />

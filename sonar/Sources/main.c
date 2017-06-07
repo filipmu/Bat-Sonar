@@ -615,6 +615,12 @@ void debug_call(int16_t num)
 
 }
 
+void arraywrite(const void * array, uint16_t array_size, size_t element_size)
+{
+fwrite(&array_size,sizeof(array_size),1,stdout);  //write out the size of the array using a 2byte unsigned word
+fwrite(array, element_size,array_size,stdout);  //write out the array
+
+}
 
 
 
@@ -1491,13 +1497,19 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  		  if(output_flag==2)
 			  			  while (fgetc(stdin) != '\r');
 
-				  fwrite(corr0, sizeof(corr0[0]),BLOCK_SIZE,stdout);
-				  fwrite(target_d,sizeof(target_d[0]),TARGET_MAX,stdout);
-				  fwrite(target_a,sizeof(target_a[0]),TARGET_MAX,stdout);
-				  fwrite(target_s,sizeof(target_s[0]),TARGET_MAX,stdout);
-				  fwrite(target_s1,sizeof(target_s1[0]),TARGET_MAX,stdout);
+				  //fwrite(corr0, sizeof(corr0[0]),BLOCK_SIZE,stdout);
+				  //fwrite(target_d,sizeof(target_d[0]),TARGET_MAX,stdout);
+				  //fwrite(target_a,sizeof(target_a[0]),TARGET_MAX,stdout);
+				  //fwrite(target_s,sizeof(target_s[0]),TARGET_MAX,stdout);
+				  //fwrite(target_s1,sizeof(target_s1[0]),TARGET_MAX,stdout);
 
-				  fflush(stdout);
+				  arraywrite(corr0, BLOCK_SIZE, sizeof(corr0[0]));
+				  arraywrite(target_d,TARGET_MAX,sizeof(target_d[0]));
+				  arraywrite(target_a,TARGET_MAX,sizeof(target_a[0]));
+				  arraywrite(target_s,TARGET_MAX,sizeof(target_s[0]));
+				  arraywrite(target_s1,TARGET_MAX,sizeof(target_s1[0]));
+
+				  fflush(stdout);  //make sure everything is sent in the cycle
 
 
 		  }

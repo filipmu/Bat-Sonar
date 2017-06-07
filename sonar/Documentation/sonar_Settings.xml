@@ -298,9 +298,9 @@
           <Frame_sync_active_state v="High" />
           <Frame_sync_initiated v="first_bit_of_data" />
           <Frame_sync_width__bits_ v="32" />
-          <Frame_size__words_ v="1" />
+          <Frame_size__words_ v="8" />
           <Shift_direction v="LSB first" />
-          <Data_clocked_in_on v="rising edge" />
+          <Data_clocked_in_on v="falling edge" />
           <First_bit_shifted_index v="0" />
           <Word_0_width__bits_ v="32" />
           <Word_N_width__bits_ v="32" />
