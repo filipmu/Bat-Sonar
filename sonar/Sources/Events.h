@@ -36,6 +36,8 @@
 #include "Pins1.h"
 #include "CsIO1.h"
 #include "IO1.h"
+#include "Bit1.h"
+#include "BitIoLdd1.h"
 
 #ifdef __cplusplus
 extern "C" {

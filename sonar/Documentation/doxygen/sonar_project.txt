@@ -28,10 +28,8 @@
 \page page_components Components 
 - \subpage PIT
 - \subpage I2S0
-- \subpage SPI0
-- \subpage SPI1
-- \subpage SPI2
 - \subpage IO1
+- \subpage BitIoLdd1
 
 */
 
@@ -66,10 +64,8 @@
 \page page_components Components 
 - \subpage PIT
 - \subpage I2S0
-- \subpage SPI0
-- \subpage SPI1
-- \subpage SPI2
 - \subpage IO1
+- \subpage BitIoLdd1
 
 */
 

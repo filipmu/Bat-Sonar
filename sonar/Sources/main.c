@@ -33,6 +33,8 @@
 #include "Pins1.h"
 #include "CsIO1.h"
 #include "IO1.h"
+#include "Bit1.h"
+#include "BitIoLdd1.h"
 /* Including shared modules, which are used for whole project */
 #include "PE_Types.h"
 #include "PE_Error.h"
@@ -137,21 +139,23 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 #define CHIRP_PULSES_DECAY_MAX 1000  //max number of pulses ever expected.
 #define PULSE_AMP 2047 //controls the chirp pulse amplitude 0 is 0 and 2047 is 3.3v (the max)
 
-#define BLOCK_SIZE 7000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
-#define CORR_SIZE 7000
+#define SAMPLE_SIZE 7000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
 #define TARGET_MAX 50 //size of target buffer - max number of targets to store
-#define TARGET_BLANK 300 //number of initial correlation samples to ignore  - at some point make this a function of the pulse amp and type of chirp
+#define TARGET_BLANK 350 //number of initial correlation samples to baseline  - at some point make this a function of the pulse amp and type of chirp
 #define TARGET_THRESHOLD 100
-uint32_t memsbuffer0[BLOCK_SIZE];
-uint32_t memsbuffer1[BLOCK_SIZE];
-uint32_t memsbuffer2[BLOCK_SIZE];
-uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
-volatile uint16_t memsbuffer_i, memsbuffer_i16;
+uint32_t memsbuffer0[SAMPLE_SIZE];
+uint32_t memsbuffer1[SAMPLE_SIZE];
+//uint32_t memsbuffer2[SAMPLE_SIZE]; //Not using SPI code for 3rd input
+//uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
+
+//volatile uint16_t memsbuffer_i16;  //Not using SPI code for 3rd input
+
+
+volatile uint16_t memsbuffer_i;
 volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
 
 uint8_t state=0;
 
-volatile int16_t corr_out0, corr_out1;
 
 //Variables that control the chirp
 uint8_t chirp_add=CHIRP_ADD;
@@ -160,7 +164,7 @@ uint16_t chirp_pulses=CHIRP_PULSES;
 uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;
 uint16_t chirp_len; //size of chirp in 32bit words
 int16_t corr_size_max; //maximum real size of correlation
-
+uint16_t sample_size=SAMPLE_SIZE;
 
 //variables that can be changed at run time and will regenerate the chirp and matched filter
 volatile uint8_t new_chirp_flag=1;
@@ -170,14 +174,19 @@ volatile uint16_t new_chirp_pulses=CHIRP_PULSES;
 volatile uint16_t new_chirp_pulses_decay=CHIRP_PULSES_DECAY;
 volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 4095 is 0 to 3.3v at input of amp
 volatile int16_t target_threshold=TARGET_THRESHOLD;
+volatile uint16_t new_sample_size=SAMPLE_SIZE;
+
 
 
 //__attribute__((section (".m_data_1FFF0000")))
 
 uint16_t timestamp=0; //time stamp used to indicate the frame
 int16_t  corr_calc0,corr_calc1, corr_calc2, corr_calc3;
-int16_t corr0[CORR_SIZE] __attribute__((section (".m_data_1FFF0000")));
-int16_t corr1[CORR_SIZE] __attribute__((section (".m_data_1FFF0000")));
+int16_t corr0[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
+int16_t corr1[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
+int16_t baseline_corr0[TARGET_BLANK];
+int16_t baseline_corr1[TARGET_BLANK];
+
 int32_t corr_DC;
 uint16_t corr_i;
 
@@ -220,6 +229,10 @@ volatile uint8_t output_flag=2;
 #define PIN_PTC3 0x0008
 #define PIN_PTC7 0x0080
 
+#define PIN_PTA4 0x0010 //SW3 on board
+#define PIN_PTC6 0x0040 //SW2 on Board
+
+
 
 
 void PIT0_Int(void)
@@ -261,6 +274,12 @@ void PIT0_Int(void)
 
 }
 
+/*
+ * Not using the SPI code
+ */
+
+/*
+
 
 void SPI0_Int(void)
 {
@@ -275,7 +294,7 @@ uint16_t buff;
 if(SPI0_SR | SPI_SR_RFDF_MASK) //check for read buffer flag
 {
 	buff=(uint16_t) SPI0_POPR;
-	if(memsbuffer_i16 < BLOCK_SIZE*2)
+	if(memsbuffer_i16 < sample_size*2)
 		{
 		memsbuffer2_16[memsbuffer_i16]=buff;
 
@@ -326,7 +345,7 @@ uint32_t buff;
 if(SPI0_SR | SPI_SR_RFDF_MASK) //check for read buffer flag
 {
 	buff=(uint16_t) SPI0_POPR;
-	if(memsbuffer_i16 < BLOCK_SIZE*2)
+	if(memsbuffer_i16 < sample_size*2)
 		{
 		memsbuffer2_16[memsbuffer_i16]=__RBIT(buff) >> 16;  //flip order of bits since can only load MSB first with slave SPI
 
@@ -360,7 +379,7 @@ if(SPI0_SR | SPI_SR_RFDF_MASK) //check for read buffer flag
 
 }
 
-
+ */
 
 void I2S_Int(void)
 {
@@ -373,7 +392,7 @@ void I2S_Int(void)
 	//buff0 = I2S0_RDR0;
 	//buff1 = I2S0_RDR1;
 
-	if(memsbuffer_i < (BLOCK_SIZE-4))  //buffer of 5
+	if(memsbuffer_i < (sample_size-4))  //buffer of 5
 	{
 		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
 		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
@@ -678,7 +697,7 @@ state=0;
 count=0;
 
 GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output.
-
+GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
   for(;;){
@@ -708,6 +727,8 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  chirp_count=new_chirp_count;
 			  chirp_pulses=new_chirp_pulses;
 			  chirp_pulses_decay=new_chirp_pulses_decay;
+
+			  sample_size=new_sample_size;  //change sample size
 
 			  //populate output buffer
 
@@ -788,7 +809,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  i_pos=i_pos-1;  //holds the max index for positive terms
 
 			  chirp_len=ind/32+10;
-			  corr_size_max = CORR_SIZE-chirp_len;
+			  corr_size_max = sample_size-chirp_len;
 			  new_chirp_flag=0;
 
 		  }
@@ -849,7 +870,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 
 	  //check if the data load is complete
-	 // if(memsbuffer_i16 == BLOCK_SIZE*2)
+	 // if(memsbuffer_i16 == sample_size*2)
 		//  {
 		// GPIOC_PCOR = PIN_PTC3; //clear pin 3
 		// state=3; //debug
@@ -962,13 +983,22 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 
 
+		  		  if(corr_i<TARGET_BLANK-3)  //subtract off baseline
+		  		  {
+			  		  corr0[corr_i]=corr_calc0-baseline_corr0[corr_i];
+			  		  corr0[corr_i+1]=corr_calc1-baseline_corr0[corr_i+1];
+			  		  corr0[corr_i+2]=corr_calc2-baseline_corr0[corr_i+2];
+			  		  corr0[corr_i+3]=corr_calc3-baseline_corr0[corr_i+3];
 
-		  		  corr0[corr_i]=corr_calc0;
-		  		  corr0[corr_i+1]=corr_calc1;
-		  		  corr0[corr_i+2]=corr_calc2;
-		  		  corr0[corr_i+3]=corr_calc3;
+		  		  }
+		  		  else
+		  		  {
+		  			  corr0[corr_i]=corr_calc0;
+		  			  corr0[corr_i+1]=corr_calc1;
+		  			  corr0[corr_i+2]=corr_calc2;
+		  			  corr0[corr_i+3]=corr_calc3;
+		  		  }
 
-		  		  corr_out0=corr_calc0;
 
 		  		  /*
 				  if (corr_i > TARGET_BLANK)
@@ -1101,15 +1131,22 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 		  		  corr_calc3 =(cplus3 <<1)-cs3; //multiply both first terms by 2 correction for using SWAR that is unsigned
 
 
-				  corr1[corr_i]=corr_calc0;
-				  corr1[corr_i+1]=corr_calc1;
-				  corr1[corr_i+2]=corr_calc2;
-				  corr1[corr_i+3]=corr_calc3;
+		  		  if(corr_i<TARGET_BLANK-3)  //subtract off baseline
+		  		  {
+			  		  corr1[corr_i]=corr_calc0-baseline_corr1[corr_i];
+			  		  corr1[corr_i+1]=corr_calc1-baseline_corr1[corr_i+1];
+			  		  corr1[corr_i+2]=corr_calc2-baseline_corr1[corr_i+2];
+			  		  corr1[corr_i+3]=corr_calc3-baseline_corr1[corr_i+3];
 
-				  corr_out1=corr_calc0;
+		  		  }
+		  		  else
+		  		  {
+		  			  corr1[corr_i]=corr_calc0;
+		  			  corr1[corr_i+1]=corr_calc1;
+		  			  corr1[corr_i+2]=corr_calc2;
+		  			  corr1[corr_i+3]=corr_calc3;
+		  		  }
 
-				  if (corr_i > TARGET_BLANK)
-				  		  {
 
 				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
 					  	  	  //target_score0= corr0[corr_i]-corr0[corr_i-1];
@@ -1141,12 +1178,11 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 				  					}
 				  				  }
 				  			  }
-				  		  }
+
 
 
 				  corr_i=corr_i+1;
-				  if (corr_i > TARGET_BLANK)
-				  		  {
+
 
 				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
 			  	         	  target_score0= corr0[corr_i];
@@ -1176,14 +1212,13 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 				  					}
 				  				  }
 				  			  }
-				  		  }
+
 
 
 
 
 				  corr_i=corr_i+1;
-				  if (corr_i > TARGET_BLANK)
-				  		  {
+
 
 				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
 
@@ -1214,14 +1249,13 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 				  					}
 				  				  }
 				  			  }
-				  		  }
+
 
 
 
 
 				  corr_i=corr_i+1;
-				  if (corr_i > TARGET_BLANK)
-				  		  {
+
 
 				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
 					  	  	  target_score0= corr0[corr_i];
@@ -1251,7 +1285,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 				  					}
 				  				  }
 				  			  }
-				  		  }
+
 
 
 
@@ -1282,6 +1316,24 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 	  if (state == 4)
 		  {
+
+		  //capture the baseline for the blanking portion
+		  if( Bit1_GetVal() ==0  )  //SW2 pressed on board
+		  {
+			 i=TARGET_BLANK;
+			 while (i>0)
+			 {
+				 i=i-1;
+				 baseline_corr0[i]=baseline_corr0[i]+corr0[i];
+				 baseline_corr1[i]=baseline_corr1[i]+corr1[i];
+
+			 }
+		  }
+
+
+
+
+
 
 		  //do some post processing
 		  //fine grain correlation for microphone 0
@@ -1452,16 +1504,7 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 
 		  timestamp=timestamp+1;  //increment the timestamp tracking the frame rate
 
-		 //create output data for audacity
 
-		  //for(corr_i=0; corr_i<(CORR_SIZE-10); ++corr_i)
-
-		  //{
-		//	corr[corr_i]=(SWAR(memsbuffer0[corr_i]) + SWAR(memsbuffer0[corr_i+1])+ SWAR(memsbuffer0[corr_i+2])+ SWAR(memsbuffer0[corr_i+3])+SWAR(memsbuffer0[corr_i+4])+SWAR(memsbuffer0[corr_i+5])+SWAR(memsbuffer0[corr_i+6])+SWAR(memsbuffer0[corr_i+7])+SWAR(memsbuffer0[corr_i+8])+SWAR(memsbuffer0[corr_i+9]))-160;
-
-
-
-		  //}
 
 
 
@@ -1482,11 +1525,6 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  {
 				  printf("\r\n\r\nNo Targets \r\n");
 			  }
-			 // printf("Correlation data \r\n");
-			  //for(i=0;i<CORR_SIZE;++i)
-			 // {
-				//  printf("%ld\r\n",corr0[i] );
-			 // }
 
 
 		  }
@@ -1497,13 +1535,13 @@ GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output
 			  		  if(output_flag==2)
 			  			  while (fgetc(stdin) != '\r');
 
-				  //fwrite(corr0, sizeof(corr0[0]),BLOCK_SIZE,stdout);
+				  //fwrite(corr0, sizeof(corr0[0]),sample_size,stdout);
 				  //fwrite(target_d,sizeof(target_d[0]),TARGET_MAX,stdout);
 				  //fwrite(target_a,sizeof(target_a[0]),TARGET_MAX,stdout);
 				  //fwrite(target_s,sizeof(target_s[0]),TARGET_MAX,stdout);
 				  //fwrite(target_s1,sizeof(target_s1[0]),TARGET_MAX,stdout);
 
-				  arraywrite(corr0, BLOCK_SIZE, sizeof(corr0[0]));
+				  arraywrite(corr0, sample_size, sizeof(corr0[0]));
 				  arraywrite(target_d,TARGET_MAX,sizeof(target_d[0]));
 				  arraywrite(target_a,TARGET_MAX,sizeof(target_a[0]));
 				  arraywrite(target_s,TARGET_MAX,sizeof(target_s[0]));

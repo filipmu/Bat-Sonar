@@ -300,7 +300,7 @@
           <Frame_sync_width__bits_ v="32" />
           <Frame_size__words_ v="8" />
           <Shift_direction v="LSB first" />
-          <Data_clocked_in_on v="rising edge" />
+          <Data_clocked_in_on v="falling edge" />
           <First_bit_shifted_index v="0" />
           <Word_0_width__bits_ v="32" />
           <Word_N_width__bits_ v="32" />
@@ -381,7 +381,7 @@
     </Events>
   </Bean>
   <Bean name="SPI0" type="Init_SPI">
-    <Enabled v="Y" />
+    <Enabled v="N" />
     <Properties>
       <Component_name v="SPI0" />
       <Device v="SPI0" />
@@ -448,7 +448,7 @@
       </group>
       <group name="Interrupts/DMA">
         <Interrupt v="INT_SPI0" />
-        <Interrupt_request v="Enabled" />
+        <Interrupt_request v="Disabled" />
         <Interrupt_priority v="&amp;lt;Automatic&amp;gt;" />
         <ISR_Name v="SPI0_slave_Int" />
         <DSPI_finished_interrupt v="Disabled" />
@@ -476,7 +476,7 @@
     </Events>
   </Bean>
   <Bean name="SPI1" type="Init_SPI">
-    <Enabled v="Y" />
+    <Enabled v="N" />
     <Properties>
       <Component_name v="SPI1" />
       <Device v="SPI1" />
@@ -581,7 +581,7 @@
     </Events>
   </Bean>
   <Bean name="SPI2" type="Init_SPI">
-    <Enabled v="Y" />
+    <Enabled v="N" />
     <Properties>
       <Component_name v="SPI2" />
       <Device v="SPI2" />

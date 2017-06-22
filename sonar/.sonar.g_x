@@ -27,53 +27,52 @@
   </ToolchainSettings>
   <GeneratedFilesList>
     <GeneratedByPE>
-      <File Name="Generated_Code/PE_LDD.h" FileDate="2017-05-14, 22:33:59" FileAge="1494819239727" FileType="45637" CompNumb="12" />
-      <File Name="Documentation/doxygen/SPI2_component.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106028" FileType="45637" CompNumb="29" />
+      <File Name="Generated_Code/PE_LDD.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888927" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/PDD/MCG_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/PE_LDD.c" FileDate="2017-05-14, 22:33:59" FileAge="1494819239603" FileType="45637" CompNumb="12" />
+      <File Name="Generated_Code/PE_LDD.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888898" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/PDD/USB_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/Init_Config.h" FileDate="2017-05-14, 22:33:59" FileAge="1494819239837" FileType="45637" CompNumb="12" />
+      <File Name="Generated_Code/Init_Config.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888589" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/PDD/CRC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/FMC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Documentation/doxygen/SPI0_component.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106325" FileType="45637" CompNumb="27" />
       <File Name="Documentation/doxygen/pex.doxyfile" FileDate="2017-06-03, 06:25:06" FileAge="1496489106180" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/PDD/VREF_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/OSC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/CAN_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Documentation/doxygen/RoutingReport_component.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106369" FileType="45637" CompNumb="12" />
+      <File Name="Documentation/doxygen/RoutingReport_component.txt" FileDate="2017-06-17, 23:41:29" FileAge="1497760889008" FileType="45637" CompNumb="12" />
       <File Name="Generated_Code/PIT.h" FileDate="2017-02-28, 21:58:40" FileAge="1488340720518" FileType="45637" CompNumb="11" />
       <File Name="Static_Code/PDD/PORT_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Generated_Code/PIT_Config.h" FileDate="2017-02-28, 21:58:40" FileAge="1488340720394" FileType="45637" CompNumb="11" />
-      <File Name="Static_Code/Peripherals/SPI0_Init.h" FileDate="2017-04-09, 22:35:09" FileAge="1491795309675" FileType="1048576" CompNumb="27" />
+      <File Name="Static_Code/Peripherals/SPI0_Init.h" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Static_Code/PDD/SMC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Static_Code/Peripherals/SPI2_Init.h" FileDate="2017-04-09, 22:43:09" FileAge="1491795789852" FileType="1048576" CompNumb="29" />
+      <File Name="Static_Code/Peripherals/SPI2_Init.h" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Static_Code/Peripherals/I2S0_Init.h" FileDate="2017-04-10, 22:45:28" FileAge="1491882328807" FileType="1048576" CompNumb="20" />
       <File Name="Generated_Code/PE_Const.h" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="45637" />
-      <File Name="Static_Code/Peripherals/SPI0_Init.c" FileDate="2017-04-09, 22:35:09" FileAge="1491795309628" FileType="1048576" CompNumb="27" />
+      <File Name="Static_Code/Peripherals/SPI0_Init.c" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Static_Code/PDD/PDD_Types.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" CompNumb="12" />
-      <File Name="Static_Code/Peripherals/SPI2_Init.c" FileDate="2017-04-09, 22:43:09" FileAge="1491795789805" FileType="1048576" CompNumb="29" />
+      <File Name="Static_Code/Peripherals/SPI2_Init.c" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Static_Code/Peripherals/I2S0_Init.c" FileDate="2017-04-10, 22:45:28" FileAge="1491882328791" FileType="1048576" CompNumb="20" />
       <File Name="Static_Code/Peripherals/PIT_Init.h" FileDate="2017-01-21, 19:38:44" FileAge="1485049124000" FileType="1048576" CompNumb="11" />
       <File Name="Generated_Code/I2S0.h" FileDate="2017-06-03, 21:59:12" FileAge="1496545152968" FileType="45637" CompNumb="20" />
-      <File Name="Generated_Code/SPI1_Config.h" FileDate="2017-04-16, 22:53:19" FileAge="1492401199050" FileType="45637" CompNumb="28" />
+      <File Name="Generated_Code/BitIoLdd1.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888679" FileType="45637" CompNumb="41" />
       <File Name="Static_Code/PDD/RCM_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/Peripherals/PIT_Init.c" FileDate="2017-01-21, 19:38:44" FileAge="1485049124000" FileType="1048576" CompNumb="11" />
+      <File Name="Generated_Code/BitIoLdd1.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888676" FileType="45637" CompNumb="41" />
       <File Name="Static_Code/PDD/FTFE_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/UART_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Documentation/doxygen/IO1_component.txt" FileDate="2017-05-15, 23:02:51" FileAge="1494907371057" FileType="45637" CompNumb="39" />
-      <File Name="Generated_Code/Vectors_Config.h" FileDate="2017-05-14, 22:33:59" FileAge="1494819239774" FileType="45637" CompNumb="12" />
+      <File Name="Generated_Code/Vectors_Config.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888950" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/PDD/CMP_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Documentation/sonar_Settings.xml" FileDate="2017-06-03, 21:59:13" FileAge="1496545153369" FileType="3072" />
-      <File Name="Generated_Code/CPU_Config.h" FileDate="2017-06-03, 21:59:10" FileAge="1496545150733" FileType="45637" CompNumb="12" />
+      <File Name="Documentation/sonar_Settings.xml" FileDate="2017-06-17, 23:41:29" FileAge="1497760889222" FileType="3072" />
+      <File Name="Generated_Code/CPU_Config.h" FileDate="2017-06-17, 23:41:25" FileAge="1497760885656" FileType="45637" CompNumb="12" />
       <File Name="Generated_Code/IO_Map.h" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="45637" />
       <File Name="Documentation/doxygen/PIT_component.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106113" FileType="45637" CompNumb="11" />
       <File Name="Static_Code/Peripherals/UART0_Init.h" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Documentation/doxygen/pex.css" FileDate="2017-06-03, 06:25:06" FileAge="1496489106426" FileType="16384" CompNumb="12" />
       <File Name="Static_Code/Peripherals/UART0_Init.c" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
-      <File Name="Documentation/sonar.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106209" FileType="3072" />
+      <File Name="Documentation/sonar.txt" FileDate="2017-06-17, 23:41:29" FileAge="1497760889627" FileType="3072" />
       <File Name="Static_Code/PDD/SAI_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" CompNumb="20" />
       <File Name="Static_Code/PDD/DMA_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Static_Code/PDD/SPI_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" CompNumb="0" />
+      <File Name="Static_Code/PDD/SPI_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Documentation/doxygen/I2S0_component.txt" FileDate="2017-06-03, 21:59:13" FileAge="1496545153044" FileType="45637" CompNumb="20" />
       <File Name="Generated_Code/PE_Error.h" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="45637" />
       <File Name="Static_Code/PDD/EWM_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
@@ -82,56 +81,53 @@
       <File Name="Static_Code/PDD/ADC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/DAC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/FTM_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Documentation/doxygen/SPI1_component.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106200" FileType="45637" CompNumb="28" />
       <File Name="Static_Code/PDD/WDOG_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Generated_Code/CsIO1.h" FileDate="2017-05-21, 22:33:28" FileAge="1495424008019" FileType="45637" CompNumb="38" />
       <File Name="Generated_Code/CsIO1.c" FileDate="2017-05-21, 22:33:28" FileAge="1495424008076" FileType="45637" CompNumb="38" />
-      <File Name="Documentation/doxygen/sonar_project.txt" FileDate="2017-06-03, 06:25:06" FileAge="1496489106297" FileType="45637" CompNumb="12" />
+      <File Name="Documentation/doxygen/sonar_project.txt" FileDate="2017-06-17, 23:41:28" FileAge="1497760888973" FileType="45637" CompNumb="12" />
       <File Name="Static_Code/System/PDD_Includes.h" FileDate="2017-01-21, 19:38:44" FileAge="1485049124000" FileType="1048576" CompNumb="12" />
       <File Name="Static_Code/PDD/CMT_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/SPI0_Config.h" FileDate="2017-04-16, 22:53:18" FileAge="1492401198863" FileType="45637" CompNumb="27" />
       <File Name="Generated_Code/IO1.h" FileDate="2017-05-15, 23:02:50" FileAge="1494907370953" FileType="45637" CompNumb="39" />
       <File Name="Static_Code/PDD/PDB_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Static_Code/Peripherals/SPI1_Init.h" FileDate="2017-04-09, 22:43:09" FileAge="1491795789789" FileType="1048576" CompNumb="28" />
+      <File Name="Static_Code/Peripherals/SPI1_Init.h" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Generated_Code/I2S0_Config.h" FileDate="2017-06-03, 21:59:13" FileAge="1496545153094" FileType="45637" CompNumb="20" />
       <File Name="Static_Code/PDD/SCB_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
+      <File Name="Documentation/doxygen/BitIoLdd1_component.txt" FileDate="2017-06-17, 23:41:28" FileAge="1497760888624" FileType="45637" CompNumb="41" />
       <File Name="Generated_Code/Cpu.h" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="45637" CompNumb="12" />
+      <File Name="Generated_Code/Bit1.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888613" FileType="45637" CompNumb="40" />
       <File Name="Generated_Code/IO1.c" FileDate="2017-05-15, 23:02:51" FileAge="1494907371012" FileType="45637" CompNumb="39" />
-      <File Name="Static_Code/Peripherals/SPI1_Init.c" FileDate="2017-04-09, 22:43:09" FileAge="1491795789774" FileType="1048576" CompNumb="28" />
+      <File Name="Static_Code/Peripherals/SPI1_Init.c" FileDate="1969-12-31, 17:59:59" FileAge="-1" FileType="1048576" />
       <File Name="Static_Code/PDD/LPTMR_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/SPI2_Config.h" FileDate="2017-04-16, 22:53:19" FileAge="1492401199221" FileType="45637" CompNumb="29" />
       <File Name="Project_Settings/Startup_Code/startup.c" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="16384" CompNumb="12" />
-      <File Name="Generated_Code/Cpu.c" FileDate="2017-05-14, 22:33:59" FileAge="1494819239556" FileType="45637" CompNumb="12" />
-      <File Name="Generated_Code/SPI2.h" FileDate="2017-04-16, 22:53:17" FileAge="1492401197973" FileType="45637" CompNumb="29" />
+      <File Name="Generated_Code/Cpu.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888890" FileType="45637" CompNumb="12" />
+      <File Name="Generated_Code/Bit1.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888609" FileType="45637" CompNumb="40" />
       <File Name="Static_Code/PDD/SysTick_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/SPI1.h" FileDate="2017-04-16, 22:53:18" FileAge="1492401198129" FileType="45637" CompNumb="28" />
       <File Name="Static_Code/PDD/USBDCD_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/PMC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/LLWU_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Project_Settings/Linker_Files/ProcessorExpert.ld" FileDate="2017-04-08, 08:08:34" FileAge="1491656914328" FileType="8" CompNumb="12" />
       <File Name="Static_Code/PDD/ENET_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/SPI0.h" FileDate="2017-04-16, 22:53:18" FileAge="1492401198285" FileType="45637" CompNumb="27" />
       <File Name="Static_Code/System/CPU_Init.h" FileDate="2017-01-21, 19:38:44" FileAge="1485049124000" FileType="1048576" CompNumb="12" />
-      <File Name="ProjectInfo.xml" FileDate="2017-06-03, 06:25:06" FileAge="1496489106292" FileType="45637" />
+      <File Name="ProjectInfo.xml" FileDate="2017-06-17, 23:41:29" FileAge="1497760889596" FileType="45637" />
       <File Name="Static_Code/System/Vectors.c" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="1048576" CompNumb="12" />
       <File Name="Static_Code/System/CPU_Init.c" FileDate="2017-01-21, 19:38:44" FileAge="1485049124000" FileType="1048576" CompNumb="12" />
       <File Name="Static_Code/PDD/PIT_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" CompNumb="11" />
-      <File Name="Generated_Code/Pins1.h" FileDate="2017-04-19, 21:39:12" FileAge="1492655952250" FileType="45637" CompNumb="5" />
+      <File Name="Generated_Code/Pins1.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888743" FileType="45637" CompNumb="5" />
       <File Name="Static_Code/PDD/MCM_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/PDD/SDHC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/Pins1.c" FileDate="2017-05-12, 22:50:30" FileAge="1494647430956" FileType="45637" CompNumb="5" />
+      <File Name="Generated_Code/Pins1.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888766" FileType="45637" CompNumb="5" />
       <File Name="Static_Code/PDD/DMAMUX_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Sources/main.c" FileDate="2017-06-03, 21:44:32" FileAge="1496544272719" FileType="128" />
+      <File Name="Sources/main.c" FileDate="2017-06-17, 23:41:28" FileAge="1497760888855" FileType="128" />
       <File Name="Static_Code/PDD/RNGA_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
       <File Name="Static_Code/System/Peripherals_Init.h" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="1048576" CompNumb="12" />
-      <File Name="Sources/Events.h" FileDate="2017-06-03, 06:25:06" FileAge="1496489106205" FileType="131328" />
+      <File Name="Sources/Events.h" FileDate="2017-06-17, 23:41:29" FileAge="1497760889023" FileType="131328" />
       <File Name="Static_Code/PDD/I2C_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
-      <File Name="Generated_Code/PE_Types.h" FileDate="2017-05-14, 22:33:59" FileAge="1494819239462" FileType="45637" />
+      <File Name="Generated_Code/PE_Types.h" FileDate="2017-06-17, 23:41:28" FileAge="1497760888793" FileType="45637" />
       <File Name="Static_Code/IO_Map/MK64F12.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" CompNumb="12" />
       <File Name="Static_Code/System/Peripherals_Init.c" FileDate="2017-01-21, 19:38:46" FileAge="1485049126000" FileType="1048576" CompNumb="12" />
       <File Name="Sources/Events.c" FileDate="2017-05-02, 23:17:39" FileAge="1493785059225" FileType="131328" />
       <File Name="Static_Code/PDD/RTC_PDD.h" FileDate="2017-01-17, 22:41:08" FileAge="1484714468000" FileType="1048576" />
     </GeneratedByPE>
   </GeneratedFilesList>
-  <CodeGenReference>225</CodeGenReference>
+  <CodeGenReference>231</CodeGenReference>
 </CodeGenerationInfo>
