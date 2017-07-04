@@ -140,9 +140,9 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 #define PULSE_AMP 2047 //controls the chirp pulse amplitude 0 is 0 and 2047 is 3.3v (the max)
 
 #define SAMPLE_SIZE 7000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
-#define TARGET_MAX 50 //size of target buffer - max number of targets to store
-#define TARGET_BLANK 350 //number of initial correlation samples to baseline  - at some point make this a function of the pulse amp and type of chirp
-#define TARGET_THRESHOLD 100
+#define TARGET_MAX 100 //size of target buffer - max number of targets to store
+#define TARGET_BLANK 340 //number of initial correlation samples to baseline should be multiple of 4  - at some point make this a function of the pulse amp and type of chirp
+#define TARGET_THRESHOLD 0
 uint32_t memsbuffer0[SAMPLE_SIZE];
 uint32_t memsbuffer1[SAMPLE_SIZE];
 //uint32_t memsbuffer2[SAMPLE_SIZE]; //Not using SPI code for 3rd input
@@ -155,6 +155,9 @@ volatile uint16_t memsbuffer_i;
 volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
 
 uint8_t state=0;
+uint8_t calibrate=0;
+int8_t calibrate_count=0;
+#define CALIBRATE_COUNT_MAX 4
 
 
 //Variables that control the chirp
@@ -165,6 +168,8 @@ uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;
 uint16_t chirp_len; //size of chirp in 32bit words
 int16_t corr_size_max; //maximum real size of correlation
 uint16_t sample_size=SAMPLE_SIZE;
+uint16_t target_max=TARGET_MAX;
+
 
 //variables that can be changed at run time and will regenerate the chirp and matched filter
 volatile uint8_t new_chirp_flag=1;
@@ -175,6 +180,8 @@ volatile uint16_t new_chirp_pulses_decay=CHIRP_PULSES_DECAY;
 volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 4095 is 0 to 3.3v at input of amp
 volatile int16_t target_threshold=TARGET_THRESHOLD;
 volatile uint16_t new_sample_size=SAMPLE_SIZE;
+volatile uint16_t new_target_max = TARGET_MAX;
+
 
 
 
@@ -183,9 +190,9 @@ volatile uint16_t new_sample_size=SAMPLE_SIZE;
 uint16_t timestamp=0; //time stamp used to indicate the frame
 int16_t  corr_calc0,corr_calc1, corr_calc2, corr_calc3;
 int16_t corr0[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
-int16_t corr1[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
+//int16_t corr1[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
 int16_t baseline_corr0[TARGET_BLANK];
-int16_t baseline_corr1[TARGET_BLANK];
+//int16_t baseline_corr1[TARGET_BLANK];
 
 int32_t corr_DC;
 uint16_t corr_i;
@@ -197,15 +204,15 @@ int32_t cplus0,cplus1,cplus2,cplus3;
 int32_t cminus0,cminus1,cminus2,cminus3;
 uint32_t a0,a1,a2,a3;
 
-
+int32_t a,b,c;
 
 uint8_t count;
 
 int16_t target_d[TARGET_MAX],target_s[TARGET_MAX], target_s1[TARGET_MAX],target_a[TARGET_MAX],target_score,target_score0,target_score1;
 int8_t target_i,target_i_max;
 
-int32_t fine_corr0[TARGET_MAX][64];	//microphone 0 target correlation
-int32_t fine_corr1[TARGET_MAX][64];  //microphone 1 target correlation
+int16_t fine_corr0[TARGET_MAX][64];	//microphone 0 target correlation
+int16_t fine_corr1[TARGET_MAX][64];  //microphone 1 target correlation
 
 int32_t inda;
 int32_t ind_pos[CHIRP_PULSES_DECAY_MAX];
@@ -641,7 +648,25 @@ fwrite(array, element_size,array_size,stdout);  //write out the array
 
 }
 
+void setamp(uint16_t amp)
+{
+	//let output swing from 50% level
 
+
+
+				  //Set the max level of the DAC
+					DAC0_DAT0H = (uint8_t) ((amp+2048) >> 8)  & 0x0F;
+					DAC0_DAT0L = (uint8_t) (amp+2048) & 0xFF;
+
+					//Set the min level of the DAC
+					DAC0_DAT1H = (uint8_t) ((4095-2048-amp) >> 8)  & 0x0F;  //set to inverse of max value
+					DAC0_DAT1L = (uint8_t) (4095-2048-amp) & 0xFF;
+
+					//Set the mid level
+					//set second word to 1.65v (50%)
+					DAC0_DAT2H = 0x08;
+					DAC0_DAT2L = 0x00;
+}
 
 /*lint -save  -e970 Disable MISRA rule (6.3) checking. */
 int main(void)
@@ -711,14 +736,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 	  if (state==0)
 	  {
 
-		  //Zero the target array
-		  for(target_i=TARGET_MAX-1; target_i>=0 ;--target_i)
-		  {
-			  target_d[target_i]=0;
-			  target_s[target_i]=0;
-		  }
 
-		  target_i=0;
+
+
+
 
 
 		  if(new_chirp_flag)  //reset chirp data
@@ -729,25 +750,9 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  chirp_pulses_decay=new_chirp_pulses_decay;
 
 			  sample_size=new_sample_size;  //change sample size
+			  target_max=new_target_max;  //change max number of targets
+			  setamp(new_pulse_amp);  //set D to A amplitude
 
-			  //populate output buffer
-
-			  //let output swing from 50% level
-
-
-
-			  //Set the max level of the DAC
-				DAC0_DAT0H = (uint8_t) ((new_pulse_amp+2048) >> 8)  & 0x0F;
-				DAC0_DAT0L = (uint8_t) (new_pulse_amp+2048) & 0xFF;
-
-				//Set the min level of the DAC
-				DAC0_DAT1H = (uint8_t) ((4095-2048-new_pulse_amp) >> 8)  & 0x0F;  //set to inverse of max value
-				DAC0_DAT1L = (uint8_t) (4095-2048-new_pulse_amp) & 0xFF;
-
-				//Set the mid level
-				//set second word to 1.65v (50%)
-				DAC0_DAT2H = 0x08;
-				DAC0_DAT2L = 0x00;
 
 
 
@@ -816,6 +821,37 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 
+		  //check for button press and if so set calibrate flag
+		  		  if( (Bit1_GetVal() ==0) && (calibrate==0) )  //SW2 pressed on board
+		  		  	  {
+		  			  calibrate=1;  //first calculate the threshold with 0 output
+
+		  			  calibrate_count = CALIBRATE_COUNT_MAX;
+		  			  target_threshold = TARGET_THRESHOLD;
+			  			for(i=TARGET_BLANK-1; i>=0 ;--i)
+			  				baseline_corr0[i]=0;
+
+		  			  setamp(0);  //set D to A amplitude to 0
+		  		  	  }
+
+		  		  if(calibrate ==1 && calibrate_count ==0)
+		  		  {
+		  			target_threshold = target_threshold + target_threshold / 5;  // add 20% safety factor
+		  			calibrate = 2;
+		  			setamp(new_pulse_amp);  //set D to A amplitude
+
+
+		  			calibrate_count = CALIBRATE_COUNT_MAX;
+
+		  		  }
+
+
+		  		  if(calibrate ==2 && calibrate_count ==0)
+		  		  {
+		  			calibrate = 0; //done calibrating
+
+		  		  }
+
 		  //output one on timing pin for mems capture
 		  GPIOC_PSOR= PIN_PTC3;
 
@@ -857,7 +893,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 	      corr_i=0;
 
-	      target_i=0;
+	      target_i=target_max-1;
 
 
 	      state=2;
@@ -881,7 +917,21 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 	  if(state ==2)
 	  {
 
+		  //Do some work here, since need to wait anyways for buffer to fill to at least a full chirp length
 
+		  //Zero the target array
+		  for(target_i=target_max-1; target_i>=0 ;--target_i)
+		  {
+			  target_d[target_i]=0;
+			  target_s[target_i]=0;
+		  }
+
+		  target_i=target_max-1;
+
+
+
+		  do
+		  {
 
 		  if (((corr_i+chirp_len) <= (memsbuffer_i)))  //start processing the correlation since we have at least a full chirp length plus buffer ahead of us to process
 
@@ -1000,293 +1050,66 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  		  }
 
 
-		  		  /*
-				  if (corr_i > TARGET_BLANK)
-				  		  {
-
-				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
-					  	  	  target_score= corr_calc0-corr0[corr_i-1];
-				  			  if((target_score > target_threshold) && (target_i < TARGET_MAX))
-				  		  		  {
-				  				  target_d[target_i]=corr_i;
-				  				  target_s[target_i]=target_score;
-				  				  target_i=target_i + 1;
-
-				  		  		  }
-					  	  	  target_score= corr_calc1-corr_calc0;
-				  			  if((target_score > target_threshold) && (target_i < TARGET_MAX))
-				  		  		  {
-				  				  target_d[target_i]=corr_i+1;
-				  				  target_s[target_i]=target_score;
-				  				  target_i=target_i + 1;
-
-				  		  		  }
-					  	  	  target_score= corr_calc2-corr_calc2;
-				  			  if((target_score > target_threshold) && (target_i < TARGET_MAX))
-				  		  		  {
-				  				  target_d[target_i]=corr_i+2;
-				  				  target_s[target_i]=target_score;
-				  				  target_i=target_i + 1;
-
-				  		  		  }
-					  	  	  target_score= corr_calc3-corr_calc2;
-				  			  if((target_score > target_threshold) && (target_i < TARGET_MAX))
-				  		  		  {
-				  				  target_d[target_i]=corr_i+3;
-				  				  target_s[target_i]=target_score;
-				  				  target_i=target_i + 1;
-
-				  		  		  }
-				  		  }
-
-*/
 
 
 
 
 
 
-				  // Do mems channel 1
 
 
-				  cminus0=0;
-				  cminus1=0;
-				  cminus2=0;
-				  cminus3=0;
+		  	  	  target_score0= corr0[corr_i];
+	  			  if(target_score0 > target_threshold)
+	  			  {
 
-				  cplus0=0;
-				  cplus1=0;
-				  cplus2=0;
-				  cplus3=0;
-
-
-				  //ct=714;
-				  //cum_ct=ct;
-				  i=0;
-
-				  for (i=0; i<=i_pos ; ++i)  //Do positive 2x factor terms
-				  {
-					  ind=ind_pos[i] >> 21;
-					  indl=(ind_pos[i] & 0xFF);
-					  indr=(ind_pos[i] & 0xFF00)>>8;
+	  					if(target_s[target_i]<=target_score0)
+	  					{
+	  						target_s[target_i]=target_score0;
+	  						target_d[target_i]=corr_i;
 
 
-					  //inda[i] = (ind << 16)  |  ((ind & 31) << 8) | (32-(ind & 31));
+							for(i=target_max-1;i>=0;--i)
+							{
+							if(target_s[i]<target_score0)
+								{
+								target_score0=target_s[i];
+								target_i=i;
 
+								}
+							}
 
-				  a0=(memsbuffer1[corr_i + 1+ ( ind)] << (indl)) | (memsbuffer1[corr_i + (ind)] >> (indr));
-				  a1=(memsbuffer1[corr_i + 2+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 1+(ind)] >> (indr));
-				  a2=(memsbuffer1[corr_i + 3+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 2+(ind)] >> (indr));
-				  a3=(memsbuffer1[corr_i + 4+ ( ind)] << (indl)) | (memsbuffer1[corr_i +3+ (ind)] >> (indr));
+	  					}
 
-				  cplus0 = __USADA8(SWARsimd(a0),0,cplus0);
-				  cplus1 = __USADA8(SWARsimd(a1),0,cplus1);
-				  cplus2 = __USADA8(SWARsimd(a2),0,cplus2);
-				  cplus3 = __USADA8(SWARsimd(a3),0,cplus3);
-
-				  }
-
-				  for (i=0; i<i_neg ; ++i)  //Do negative 2x factor terms
-				  {
-				  ind=ind_neg[i] >> 21;
-				  indl=(ind_neg[i] & 0xFF);
-				  indr=(ind_neg[i] & 0xFF00)>>8;
-
-
-				  a0=(memsbuffer1[corr_i + 1+ ( ind)] << (indl)) | (memsbuffer1[corr_i + (ind)] >> (indr));
-				  a1=(memsbuffer1[corr_i + 2+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 1+(ind)] >> (indr));
-				  a2=(memsbuffer1[corr_i + 3+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 2+(ind)] >> (indr));
-				  a3=(memsbuffer1[corr_i + 4+ ( ind)] << (indl)) | (memsbuffer1[corr_i +3+ (ind)] >> (indr));
-
-
-				  cminus0 = __USADA8(SWARsimd(a0),0,cminus0);
-				  cminus1 = __USADA8(SWARsimd(a1),0,cminus1);
-				  cminus2 = __USADA8(SWARsimd(a2),0,cminus2);
-				  cminus3 = __USADA8(SWARsimd(a3),0,cminus3);
-
-
-				  }
-
-				  ind=ind_neg[i_neg] >> 21;
-				  indl=(ind_neg[i_neg] & 0xFF);
-				  indr=(ind_neg[i_neg] & 0xFF00)>>8;
-
-				  //do a negative 1x term along with the 0 1x term
-				  a0=(memsbuffer1[corr_i + 1+ ( ind)] << (indl)) | (memsbuffer1[corr_i + (ind)] >> (indr));
-				  a1=(memsbuffer1[corr_i + 2+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 1+(ind)] >> (indr));
-				  a2=(memsbuffer1[corr_i + 3+ ( ind)] << (indl)) | (memsbuffer1[corr_i + 2+(ind)] >> (indr));
-				  a3=(memsbuffer1[corr_i + 4+ ( ind)] << (indl)) | (memsbuffer1[corr_i +3+ (ind)] >> (indr));
-
-
-
-		  		  cs0=__USADA8( __UQADD8(SWARsimd(memsbuffer1[corr_i]), SWARsimd(a0)),0,cminus0 <<1);
-		  		  cs1=__USADA8( __UQADD8(SWARsimd(memsbuffer1[corr_i+1]), SWARsimd(a1)),0,cminus1 <<1);
-		  		  cs2=__USADA8( __UQADD8(SWARsimd(memsbuffer1[corr_i+2]), SWARsimd(a2)),0,cminus2 <<1);
-		  		  cs3=__USADA8( __UQADD8(SWARsimd(memsbuffer1[corr_i+3]), SWARsimd(a3)),0,cminus3 <<1);
-
-
-		  		  corr_calc0 =(cplus0 <<1)-cs0; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc1 =(cplus1 <<1)-cs1; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc2 =(cplus2 <<1)-cs2; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc3 =(cplus3 <<1)-cs3; //multiply both first terms by 2 correction for using SWAR that is unsigned
-
-
-		  		  if(corr_i<TARGET_BLANK-3)  //subtract off baseline
-		  		  {
-			  		  corr1[corr_i]=corr_calc0-baseline_corr1[corr_i];
-			  		  corr1[corr_i+1]=corr_calc1-baseline_corr1[corr_i+1];
-			  		  corr1[corr_i+2]=corr_calc2-baseline_corr1[corr_i+2];
-			  		  corr1[corr_i+3]=corr_calc3-baseline_corr1[corr_i+3];
-
-		  		  }
-		  		  else
-		  		  {
-		  			  corr1[corr_i]=corr_calc0;
-		  			  corr1[corr_i+1]=corr_calc1;
-		  			  corr1[corr_i+2]=corr_calc2;
-		  			  corr1[corr_i+3]=corr_calc3;
-		  		  }
-
-
-				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
-					  	  	  //target_score0= corr0[corr_i]-corr0[corr_i-1];
-					  	  	  target_score0= corr0[corr_i];
-				  			  if(target_score0 > target_threshold)
-				  			  {
-				  				  //target_score1=corr1[corr_i]-corr1[corr_i-1];
-				  				  target_score1=corr1[corr_i];
-				  				  if(target_score1 > target_threshold)
-				  				  {
-				  					target_score0=target_score0+target_score1;
-				  					if(target_s[target_i]<=target_score0)
-				  					{
-				  						target_s[target_i]=target_score0;
-				  						//target_s1[target_i]=target_score1;  //keep track of channel 1 too
-				  						target_d[target_i]=corr_i;
-
-
-										for(i=TARGET_MAX-1;i>=0;--i)
-										{
-										if(target_s[i]<target_score0)
-											{
-											target_score0=target_s[i];
-											target_i=i;
-
-											}
-										}
-
-				  					}
-				  				  }
-				  			  }
+	  			  }
 
 
 
 				  corr_i=corr_i+1;
 
 
-				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
-			  	         	  target_score0= corr0[corr_i];
-				  			  if(target_score0 > target_threshold)
-				  			  {
-				  				  target_score1=corr1[corr_i];
-				  				  if(target_score1 > target_threshold)
-				  				  {
-				  					target_score0=target_score0+target_score1;
-				  					if(target_s[target_i]<=target_score0)
-				  					{
-				  						target_s[target_i]=target_score0;
-				  						//target_s1[target_i]=target_score1;  //keep track of channel 1 too
-				  						target_d[target_i]=corr_i;
+		  	  	  target_score0= corr0[corr_i];
+	  			  if(target_score0 > target_threshold)
+	  			  {
+
+	  					if(target_s[target_i]<=target_score0)
+	  					{
+	  						target_s[target_i]=target_score0;
+	  						target_d[target_i]=corr_i;
 
 
-										for(i=TARGET_MAX-1;i>=0;--i)
-										{
-										if(target_s[i]<target_score0)
-											{
-											target_score0=target_s[i];
-											target_i=i;
+							for(i=target_max-1;i>=0;--i)
+							{
+							if(target_s[i]<target_score0)
+								{
+								target_score0=target_s[i];
+								target_i=i;
 
-											}
-										}
+								}
+							}
 
-				  					}
-				  				  }
-				  			  }
+	  					}
 
-
-
-
-
-				  corr_i=corr_i+1;
-
-
-				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
-
-					  	  	  target_score0= corr0[corr_i];
-					  	  	  if(target_score0 > target_threshold)
-				  			  {
-				  				  target_score1=corr1[corr_i];
-				  				  if(target_score1 > target_threshold)
-				  				  {
-				  					target_score0=target_score0+target_score1;
-				  					if(target_s[target_i]<=target_score0)
-				  					{
-				  						target_s[target_i]=target_score0;
-				  						//target_s1[target_i]=target_score1;  //keep track of channel 1 too
-				  						target_d[target_i]=corr_i;
-
-
-										for(i=TARGET_MAX-1;i>=0;--i)
-										{
-										if(target_s[i]<target_score0)
-											{
-											target_score0=target_s[i];
-											target_i=i;
-
-											}
-										}
-
-				  					}
-				  				  }
-				  			  }
-
-
-
-
-
-				  corr_i=corr_i+1;
-
-
-				  			  //target_score= 2*(corr_calc1-corr_calc0-corr_calc2)+corr[corr_i-6]+corr_calc4; //calculate sombrero fit
-					  	  	  target_score0= corr0[corr_i];
-				  			  if(target_score0 > target_threshold)
-				  			  {
-				  				  target_score1=corr1[corr_i];
-				  				  if(target_score1 > target_threshold)
-				  				  {
-				  					target_score0=target_score0+target_score1;
-				  					if(target_s[target_i]<=target_score0)
-				  					{
-				  						target_s[target_i]=target_score0;
-				  						//target_s1[target_i]=target_score1;  //keep track of channel 1 too
-				  						target_d[target_i]=corr_i;
-
-
-										for(i=TARGET_MAX-1;i>=0;--i)
-										{
-										if(target_s[i]<target_score0)
-											{
-											target_score0=target_s[i];
-											target_i=i;
-
-											}
-										}
-
-				  					}
-				  				  }
-				  			  }
-
-
+	  			  }
 
 
 
@@ -1294,40 +1117,128 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 
+		  	  	  target_score0= corr0[corr_i];
+	  			  if(target_score0 > target_threshold)
+	  			  {
+
+	  					if(target_s[target_i]<=target_score0)
+	  					{
+	  						target_s[target_i]=target_score0;
+	  						target_d[target_i]=corr_i;
+
+
+							for(i=target_max-1;i>=0;--i)
+							{
+							if(target_s[i]<target_score0)
+								{
+								target_score0=target_s[i];
+								target_i=i;
+
+								}
+							}
+
+	  					}
+
+	  			  }
 
 
 
+				  corr_i=corr_i+1;
+
+		  	  	  target_score0= corr0[corr_i];
+	  			  if(target_score0 > target_threshold)
+	  			  {
+
+	  					if(target_s[target_i]<=target_score0)
+	  					{
+	  						target_s[target_i]=target_score0;
+	  						target_d[target_i]=corr_i;
+
+
+							for(i=target_max-1;i>=0;--i)
+							{
+							if(target_s[i]<target_score0)
+								{
+								target_score0=target_s[i];
+								target_i=i;
+
+								}
+							}
+
+	  					}
+
+	  			  }
 
 
 
-				  if ((corr_i) >= (corr_size_max))  //check if we have processed the whole mems buffer
-					  {
-					  GPIOC_PCOR = PIN_PTC2; //clear pin 2
-					  state = 4;  //go to next state
-					  }
+				  corr_i=corr_i+1;
+
+		  	  	  }
+		  	  	  }
+				  while(corr_i < corr_size_max);  //check if we have processed the whole mems buffer
+
+
+				  GPIOC_PCOR = PIN_PTC2; //clear pin 2
+				  state = 4;  //go to next state
+
 
 
 
 
   	  	  }
 
-	}
+
 
 
 	  if (state == 4)
 		  {
 
-		  //capture the baseline for the blanking portion
-		  if( Bit1_GetVal() ==0  )  //SW2 pressed on board
+		  if (calibrate ==1 && calibrate_count >0) //capture average signal when there is no ping
+		  {
+
+			  i=corr_size_max;
+
+			  while (i>0)
+			  {
+				  i=i-1;
+				  if(corr0[i]>target_threshold)
+					  target_threshold = corr0[i];
+
+			  }
+			  calibrate_count = calibrate_count -1;
+
+		  }
+
+
+		  else if(calibrate==2 && calibrate_count == CALIBRATE_COUNT_MAX)
 		  {
 			 i=TARGET_BLANK;
 			 while (i>0)
 			 {
 				 i=i-1;
 				 baseline_corr0[i]=baseline_corr0[i]+corr0[i];
-				 baseline_corr1[i]=baseline_corr1[i]+corr1[i];
+
 
 			 }
+
+			 calibrate_count = calibrate_count -1;
+
+		  }
+
+
+		else if( calibrate==2 && calibrate_count >0 )  //capture the baseline for the blanking portion
+		  {
+			 i=TARGET_BLANK;
+			 while (i>0)
+			 {
+				 i=i-1;
+				 baseline_corr0[i]=baseline_corr0[i]+corr0[i]/2;
+				 //baseline_corr1[i]=baseline_corr1[i]+corr1[i];
+
+			 }
+
+			 calibrate_count = calibrate_count -1;
+
 		  }
 
 
@@ -1339,10 +1250,12 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  //fine grain correlation for microphone 0
 
 		 // GPIOC_PSOR = PIN_PTC7; //set pin 7
-		  target_i=TARGET_MAX-1;
+		  target_i=target_max-1;
 
-		  while(target_i>=0 && target_d[target_i]>0)
-		  {
+		  while(target_i>=0)
+		   {
+			  if (target_d[target_i]>0)
+			  {
 
 				  i=0;
 				  j=0;
@@ -1496,9 +1409,100 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 				  target_s[target_i]=m0_max;
 				  target_s1[target_i]=m1_max;
 
-				  target_i=target_i-1;
 
-		  }  //while loop
+
+		  }  //if loop
+		   else
+		   {
+			   target_a[target_i]=0;
+			  target_s[target_i]=0;
+			  target_s1[target_i]=0;
+		   }
+		  target_i=target_i-1;
+		  }//while loop
+
+		  //new way to find max using interpolation
+
+/*
+		  //m1=fdiv((a1-c1),(a1+c1-(b1<<1)))>>1;
+
+		  target_i=target_max-1;
+
+		  while(target_i>=0 && target_d[target_i]>0)
+		  	{
+
+
+		  	a=corr0[target_d[target_i]-1];
+		  	b=corr0[target_d[target_i]];
+		  	c=corr0[target_d[target_i]+1];
+
+		  	m0_max_loc=((  a - c  )*32) / (a+c-2*b);
+
+		  	if (m0_max_loc<-32)
+		  		m0_max_loc=-32;
+		  	else if(m0_max_loc>32)
+		  		m0_max_loc=32;
+
+
+		  	a=fine_corr1[target_i][0];
+		  	b=fine_corr1[target_i][31];
+		  	c=fine_corr1[target_i][63];
+
+		  	m1_max_loc=((  a - c  )*32) / (a+c-2*b);
+
+
+				  	if (m1_max_loc<-32)
+				  		m1_max_loc=-32;
+				  	else if(m1_max_loc>32)
+				  		m1_max_loc=32;
+
+		  	target_a[target_i]=m1_max_loc-m0_max_loc;
+		  	target_i=target_i-1;
+		  	}
+
+*/
+
+	//try using zero crossing estimate to find phase difference
+/*
+		  target_i=target_max-1;
+
+		  while(target_i>=0 && target_d[target_i]>0)
+			{
+
+			  //find zero crossing after peak for channel 0
+			  corr_i=target_d[target_i]; //take the one and scan next couple
+
+			  if(corr0[corr_i]>0 && corr0[corr_i+1]<0)
+				  m0_max_loc=32*corr0[corr_i]/(corr0[corr_i]-corr0[corr_i+1]);
+			  else if(corr0[corr_i+1]>0 && corr0[corr_i+2]<0)
+				  m0_max_loc=32+32*corr0[corr_i+1]/(corr0[corr_i+1]-corr0[corr_i+2]);
+			  else
+				  m0_max_loc=-1000;
+
+			  //find zero crossing peak for channel 1
+
+			  if(fine_corr1[target_i][0]> fine_corr1[target_i][63])
+			  	  {//peak in ch 1 is leading ch 0's peak
+				  if(fine_corr1[target_i][0]>0 && fine_corr1[target_i][32]<0)
+					  m1_max_loc=-32+32*fine_corr1[target_i][0]/(fine_corr1[target_i][0]-fine_corr1[target_i][32]);
+				  else if(fine_corr1[target_i][32]>0 && fine_corr1[target_i][63]<0)
+					  m1_max_loc=32*fine_corr1[target_i][32]/(fine_corr1[target_i][32]-fine_corr1[target_i][63]);
+				  else
+					  m1_max_loc=1000;
+			  	  }
+			  else
+			  { //peak in ch 1 is lagging ch 0's peak
+				  if(fine_corr1[target_i][32]>0 && fine_corr1[target_i][63]<0)
+					  m1_max_loc=32*fine_corr1[target_i][32]/(fine_corr1[target_i][32]-fine_corr1[target_i][63]);
+				  else
+					  m1_max_loc=1000;
+
+			  }
+			target_a[target_i]=m1_max_loc-m0_max_loc;
+			target_i=target_i-1;
+			}
+
+*/
 
 		  GPIOC_PCOR = PIN_PTC7; //clear pin 7
 
@@ -1515,7 +1519,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  if(target_i_max<255)
 			  {
 			  printf("\r\n\r\nTarget data \r\n");
-			  for(target_i=0; target_i<TARGET_MAX; ++target_i)
+			  for(target_i=0; target_i<target_max; ++target_i)
 			  	{
 				  if(target_d[target_i]>0)
 				  printf("%d, %d , %d, %d, %d\r\n",timestamp,target_d[target_i],target_a[target_i],target_s[target_i], target_s1[target_i] );
@@ -1536,16 +1540,19 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  			  while (fgetc(stdin) != '\r');
 
 				  //fwrite(corr0, sizeof(corr0[0]),sample_size,stdout);
-				  //fwrite(target_d,sizeof(target_d[0]),TARGET_MAX,stdout);
-				  //fwrite(target_a,sizeof(target_a[0]),TARGET_MAX,stdout);
-				  //fwrite(target_s,sizeof(target_s[0]),TARGET_MAX,stdout);
-				  //fwrite(target_s1,sizeof(target_s1[0]),TARGET_MAX,stdout);
+				  //fwrite(target_d,sizeof(target_d[0]),target_max,stdout);
+				  //fwrite(target_a,sizeof(target_a[0]),target_max,stdout);
+				  //fwrite(target_s,sizeof(target_s[0]),target_max,stdout);
+				  //fwrite(target_s1,sizeof(target_s1[0]),target_max,stdout);
 
-				  arraywrite(corr0, sample_size, sizeof(corr0[0]));
-				  arraywrite(target_d,TARGET_MAX,sizeof(target_d[0]));
-				  arraywrite(target_a,TARGET_MAX,sizeof(target_a[0]));
-				  arraywrite(target_s,TARGET_MAX,sizeof(target_s[0]));
-				  arraywrite(target_s1,TARGET_MAX,sizeof(target_s1[0]));
+				  //arraywrite(corr0, sample_size, sizeof(corr0[0]));
+
+			  	  arraywrite(fine_corr0, target_max*64, sizeof(fine_corr0[0][0]));
+				  arraywrite(fine_corr1, target_max*64, sizeof(fine_corr1[0][0]));
+				  arraywrite(target_d,target_max,sizeof(target_d[0]));
+				  arraywrite(target_a,target_max,sizeof(target_a[0]));
+				  arraywrite(target_s,target_max,sizeof(target_s[0]));
+				  arraywrite(target_s1,target_max,sizeof(target_s1[0]));
 
 				  fflush(stdout);  //make sure everything is sent in the cycle
 
