@@ -3,7 +3,7 @@
   <Header>
     <Name>sonar</Name>
     <SavedBy>Filip</SavedBy>
-    <ModificationStamp>166</ModificationStamp>
+    <ModificationStamp>181</ModificationStamp>
     <Date>2017-01-17</Date>
     <IDE>Eclipse IDE</IDE>
     <PEversion>1.12.2.RT7_b1550-0615</PEversion>
@@ -16064,15 +16064,15 @@
         <ItemSymbol>PTC5_LLWU_P9_SPI0_SCK_LPTMR0_ALT2_I2S0_RXD0_FB_AD10_CMP0_OUT_FTM0_CH2_pull_select</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value>Up</Value>
-        <PinFuncPropStateId>up</PinFuncPropStateId>
+        <Value>Down</Value>
+        <PinFuncPropStateId>down</PinFuncPropStateId>
       </ItemState>
       <ItemState>
         <ItemSymbol>PTC5_LLWU_P9_SPI0_SCK_LPTMR0_ALT2_I2S0_RXD0_FB_AD10_CMP0_OUT_FTM0_CH2_pull_enable</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value>Disabled</Value>
-        <PinFuncPropStateId>disable</PinFuncPropStateId>
+        <Value>Enabled</Value>
+        <PinFuncPropStateId>enable</PinFuncPropStateId>
       </ItemState>
       <ItemState>
         <ItemSymbol>CMP0_IN0_PTC6_LLWU_P10_SPI0_SOUT_PDB0_EXTRG_I2S0_RX_BCLK_FB_AD9_I2S0_MCLK</ItemSymbol>
@@ -16388,15 +16388,15 @@
         <ItemSymbol>ADC1_SE7b_PTC11_LLWU_P11_I2C1_SDA_FTM3_CH7_I2S0_RXD1_FB_RW_b_pull_select</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value>Up</Value>
-        <PinFuncPropStateId>up</PinFuncPropStateId>
+        <Value>Down</Value>
+        <PinFuncPropStateId>down</PinFuncPropStateId>
       </ItemState>
       <ItemState>
         <ItemSymbol>ADC1_SE7b_PTC11_LLWU_P11_I2C1_SDA_FTM3_CH7_I2S0_RXD1_FB_RW_b_pull_enable</ItemSymbol>
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
-        <Value>Disabled</Value>
-        <PinFuncPropStateId>disable</PinFuncPropStateId>
+        <Value>Enabled</Value>
+        <PinFuncPropStateId>enable</PinFuncPropStateId>
       </ItemState>
       <ItemState>
         <ItemSymbol>PTC12_UART4_RTS_b_FB_AD27_FTM3_FLT0</ItemSymbol>
@@ -20818,8 +20818,8 @@
         <ReadOnly>false</ReadOnly>
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
-        <Index>0</Index>
-        <EnumSymbVal>00</EnumSymbVal>
+        <Index>1</Index>
+        <EnumSymbVal>01</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>MclkMultiplierFeatureCondGroup</ItemSymbol>
@@ -20832,8 +20832,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeMclkMultiplier</TypeSpecNameState>
-        <Index>0</Index>
-        <EnumSymbVal>0</EnumSymbVal>
+        <Index>3</Index>
+        <EnumSymbVal>3</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>MclkDividerFeatureCondGroup</ItemSymbol>
@@ -20846,8 +20846,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeMclkDivider</TypeSpecNameState>
-        <Index>0</Index>
-        <EnumSymbVal>0</EnumSymbVal>
+        <Index>4</Index>
+        <EnumSymbVal>4</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>ClockRatio_labelFeatureCondGroup</ItemSymbol>
@@ -20856,7 +20856,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>ClockRatio_label</ItemSymbol>
-        <Value>1</Value>
+        <Value>1.25</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>MclkClockDirection</ItemSymbol>
@@ -20869,7 +20869,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>MclkOutFreq</ItemSymbol>
-        <Value>120 MHz</Value>
+        <Value>40 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TxClockSettingsGroup</ItemSymbol>
@@ -20891,8 +20891,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeTxBitClockDivider</TypeSpecNameState>
-        <Index>39</Index>
-        <EnumSymbVal>39</EnumSymbVal>
+        <Index>9</Index>
+        <EnumSymbVal>9</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>TxBitClockDirection</ItemSymbol>
@@ -20905,7 +20905,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>TxBitClockFreq</ItemSymbol>
-        <Value>1.500 MHz</Value>
+        <Value>2 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TxSynchronousModeFeatureCondGroup</ItemSymbol>
@@ -20969,8 +20969,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeRxBitClockDivider</TypeSpecNameState>
-        <Index>14</Index>
-        <EnumSymbVal>14</EnumSymbVal>
+        <Index>4</Index>
+        <EnumSymbVal>4</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>RxBitClockDirection</ItemSymbol>
@@ -21314,8 +21314,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeRxSyncWidth</TypeSpecNameState>
-        <Index>31</Index>
-        <EnumSymbVal>32</EnumSymbVal>
+        <Index>0</Index>
+        <EnumSymbVal>1</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>RxFrameSize</ItemSymbol>
@@ -21323,8 +21323,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeRxFrameSize</TypeSpecNameState>
-        <Index>7</Index>
-        <EnumSymbVal>8</EnumSymbVal>
+        <Index>0</Index>
+        <EnumSymbVal>1</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>RxShiftDirection</ItemSymbol>
@@ -21434,8 +21434,8 @@
         <UserReadOnly>false</UserReadOnly>
         <PropertyModelIsAutomatic>false</PropertyModelIsAutomatic>
         <TypeSpecNameState>typeRxWatermarkValue</TypeSpecNameState>
-        <Index>4</Index>
-        <EnumSymbVal>4</EnumSymbVal>
+        <Index>5</Index>
+        <EnumSymbVal>5</EnumSymbVal>
       </ItemState>
       <ItemState>
         <ItemSymbol>RxFIFO_PackingModeFeatureCondGroup</ItemSymbol>
@@ -22233,7 +22233,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency0</ItemSymbol>
-        <Value>4 MHz</Value>
+        <Value>2.667 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor0</ItemSymbol>
@@ -22255,7 +22255,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor0</ItemSymbol>
@@ -22277,7 +22277,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor0</ItemSymbol>
@@ -22299,7 +22299,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize0</ItemSymbol>
@@ -22412,7 +22412,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency1</ItemSymbol>
-        <Value>15 MHz</Value>
+        <Value>10 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor1</ItemSymbol>
@@ -22434,7 +22434,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor1</ItemSymbol>
@@ -22456,7 +22456,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor1</ItemSymbol>
@@ -22478,7 +22478,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize1</ItemSymbol>
@@ -23264,7 +23264,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency0</ItemSymbol>
-        <Value>4 MHz</Value>
+        <Value>2.667 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor0</ItemSymbol>
@@ -23286,7 +23286,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor0</ItemSymbol>
@@ -23308,7 +23308,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor0</ItemSymbol>
@@ -23330,7 +23330,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize0</ItemSymbol>
@@ -23446,7 +23446,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency1</ItemSymbol>
-        <Value>15 MHz</Value>
+        <Value>10 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor1</ItemSymbol>
@@ -23468,7 +23468,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor1</ItemSymbol>
@@ -23490,7 +23490,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor1</ItemSymbol>
@@ -23512,7 +23512,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize1</ItemSymbol>
@@ -24305,7 +24305,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency0</ItemSymbol>
-        <Value>4 MHz</Value>
+        <Value>2.667 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor0</ItemSymbol>
@@ -24327,7 +24327,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor0</ItemSymbol>
@@ -24349,7 +24349,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor0</ItemSymbol>
@@ -24371,7 +24371,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay0</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize0</ItemSymbol>
@@ -24487,7 +24487,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>Frequency1</ItemSymbol>
-        <Value>15 MHz</Value>
+        <Value>10 MHz</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDivisor1</ItemSymbol>
@@ -24509,7 +24509,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>PCStoSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDivisor1</ItemSymbol>
@@ -24531,7 +24531,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterSCKDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDivisor1</ItemSymbol>
@@ -24553,7 +24553,7 @@
       </ItemState>
       <ItemState>
         <ItemSymbol>AfterTransferDelay1</ItemSymbol>
-        <Value>0.033 us</Value>
+        <Value>0.050 us</Value>
       </ItemState>
       <ItemState>
         <ItemSymbol>TransferSize1</ItemSymbol>

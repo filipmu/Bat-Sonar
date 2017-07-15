@@ -16,10 +16,10 @@ by the component.
 <tr><td colspan="4" class="ttitle1">I2S0 Initialization</td></tr>
 <tr><td class="ttitle2">Address</td><td class="ttitle2">Register</td><td class="ttitle2">Register Value</td><td class="ttitle2">Register Description</td></tr>
 <tr><td>0x4002F100</td><td>I2S0_MCR</td>
-<td class="regNotResetVal">0x40000000</td>
+<td class="regNotResetVal">0x41000000</td>
  <td>I2S0_MCR register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F104</td><td>I2S0_MDR</td>
-<td class="regResetVal">0x00000000</td>
+<td class="regNotResetVal">0x00003004</td>
  <td>I2S0_MDR register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F000</td><td>I2S0_TCSR</td>
 <td class="regNotResetVal">0x321FE000</td>
@@ -31,13 +31,13 @@ by the component.
 <td class="regResetVal">0x00000000</td>
  <td>I2S0_TCR1 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F084</td><td>I2S0_RCR1</td>
-<td class="regNotResetVal">0x00000004</td>
+<td class="regNotResetVal">0x00000005</td>
  <td>I2S0_RCR1 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F008</td><td>I2S0_TCR2</td>
-<td class="regNotResetVal">0x05000027</td>
+<td class="regNotResetVal">0x05000009</td>
  <td>I2S0_TCR2 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F088</td><td>I2S0_RCR2</td>
-<td class="regNotResetVal">0x0700000E</td>
+<td class="regNotResetVal">0x07000004</td>
  <td>I2S0_RCR2 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F00C</td><td>I2S0_TCR3</td>
 <td class="regResetVal">0x00000000</td>
@@ -49,7 +49,7 @@ by the component.
 <td class="regResetVal">0x00000000</td>
  <td>I2S0_TCR4 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F090</td><td>I2S0_RCR4</td>
-<td class="regNotResetVal">0x00071F01</td>
+<td class="regNotResetVal">0x00000001</td>
  <td>I2S0_RCR4 register, peripheral I2S0.</td></tr>
 <tr><td>0x4002F014</td><td>I2S0_TCR5</td>
 <td class="regNotResetVal">0x07070000</td>
@@ -118,7 +118,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F100</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x40000000</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x41000000</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>31</td><td>DUF</td><td>0x00</td><td>Divider Update Flag</td>
@@ -166,7 +166,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F104</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00000000</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00003004</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>12 - 19</td><td>FRACT</td><td>0x00</td><td>MCLK Fraction</td>
@@ -409,7 +409,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F084</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00000004</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00000005</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>0 - 2</td><td>RFW</td><td>0x04</td><td>Receive FIFO Watermark</td>
@@ -457,7 +457,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F008</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x05000027</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x05000009</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>30 - 31</td><td>SYNC</td><td>0x00</td><td>Synchronous Mode</td>
@@ -511,7 +511,7 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F088</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x0700000E</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x07000004</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>30 - 31</td><td>SYNC</td><td>0x00</td><td>Synchronous Mode</td>
@@ -718,11 +718,11 @@ registers of the peripheral(s) configured by the component.
         
 </div>
 <table class="regtbl2"><tr><td class="trowtit" colspan="2">Address</td><td colspan="2">0x4002F090</td></tr>
-<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00071F01</td></tr>
+<tr class="trowtit"><td  class="trowtit" colspan="2">Initial value</td><td colspan="2">0x00000001</td></tr>
 <tr class="trowtit"><td  class="trowtit" colspan="2">After-reset value</td><td colspan="2">0x00000000</td></tr>
 <tr><td class="ttitle2">Bit</td><td class="ttitle2">Field</td><td class="ttitle2">Value</td><td class="ttitle2">Description</td></tr>
 <tr><td>16 - 20</td><td>FRSZ</td><td>0x00</td><td>Frame Size</td>
-<tr><td>8 - 12</td><td>SYWD</td><td>0x10</td><td>Sync Width</td>
+<tr><td>8 - 12</td><td>SYWD</td><td>0x00</td><td>Sync Width</td>
 <tr><td>4</td><td>MF</td><td>0x00</td><td>MSB First</td>
 <tr><td>3</td><td>FSE</td><td>0x00</td><td>Frame Sync Early</td>
 <tr><td>1</td><td>FSP</td><td>0x00</td><td>Frame Sync Polarity</td>
@@ -919,23 +919,23 @@ registers of the peripheral(s) configured by the component.
 **          Settings                                       : 
 **            Clock gate                                   : Enabled
 **            Clock setting                                : 
-**              Clock source                               : Core/System clock
-**              Clock multiplier                           : multiply by 1
-**              Clock divider                              : divide by 1
-**              Clock ratio                                : 1
+**              Clock source                               : OSC0 clock
+**              Clock multiplier                           : multiply by 4
+**              Clock divider                              : divide by 5
+**              Clock ratio                                : 1.25
 **              MCLK clock source/direction                : Internal
-**              MCLK out frequency                         : 120 MHz
+**              MCLK out frequency                         : 40 MHz
 **              Transmit clock setting                     : 
 **                Clock source                             : I2S0_MCLK_out
-**                Bit clock divider                        : divide by 80
+**                Bit clock divider                        : divide by 20
 **                Bit clock source/direction               : Internal
-**                Bit clock frequency                      : 1.500 MHz
+**                Bit clock frequency                      : 2 MHz
 **                Synchronous mode                         : Asynchronous
 **                Bit clock swap                           : no
 **                Bit clock input                          : internal
 **              Receive clock setting                      : 
 **                Clock source                             : I2S0_MCLK_out
-**                Bit clock divider                        : divide by 30
+**                Bit clock divider                        : divide by 10
 **                Bit clock source/direction               : Internal
 **                Bit clock frequency                      : 4 MHz
 **                Synchronous mode                         : Asynchronous
@@ -963,8 +963,8 @@ registers of the peripheral(s) configured by the component.
 **              Frame sync source/direction                : Internal
 **              Frame sync active state                    : High
 **              Frame sync initiated                       : first_bit_of_data
-**              Frame sync width [bits]                    : 32
-**              Frame size [words]                         : 8
+**              Frame sync width [bits]                    : 1
+**              Frame size [words]                         : 1
 **              Shift direction                            : LSB first
 **              Data clocked in on                         : falling edge
 **              First bit shifted index                    : 0
@@ -973,7 +973,7 @@ registers of the peripheral(s) configured by the component.
 **              Word flag configuration [words]            : 32
 **              Data channel 0                             : Enabled
 **              Data channel 1                             : Enabled
-**              FIFO full watermark                        : 5
+**              FIFO full watermark                        : 6
 **              Time slot mask                             : 0
 **              Stop in wait mode                          : no
 **              Stop in debug mode                         : no

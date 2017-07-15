@@ -132,19 +132,25 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 
 //#define CHIRP_COUNT 483
 //#define CHIRP_ADD 16
-#define CHIRP_COUNT 600 //should be 30MHz/freq 42khz is 714, 40khz is 750, 50khz is 600, 60khz is 500
-#define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave 1=.0166 microsec
+
+#define PIT_CLK 60000000 //PIT clock always has frequency of bus clock 60Mhz
+#define I2S_CLK 4000000 //frequency of I2C bit clock, 4Mhz
+#define CHIRP_FREQ 50000 //initial frequency of chirp.  Goes down from here.
+#define CHIRP_COUNT PIT_CLK/2/CHIRP_FREQ //should be PIT_CLK/2/freq .For a 60Mhz PIT clock, 42khz is 714, 40khz is 750, 50khz is 600, 60khz is 500
+#define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave 1=.0166 microsec for 60Mhz PIT Clock
 #define CHIRP_PULSES 200  //was 64
 #define CHIRP_PULSES_DECAY 200  //used for the matched filter pattern.  Make it slightly larger than CHIRP_PULSES to model the decay of 40kHZ pulses in the piezo
 #define CHIRP_PULSES_DECAY_MAX 1000  //max number of pulses ever expected.
 #define PULSE_AMP 2047 //controls the chirp pulse amplitude 0 is 0 and 2047 is 3.3v (the max)
 
-#define SAMPLE_SIZE 7000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
+#define SAMPLE_SIZE 10000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
 #define TARGET_MAX 100 //size of target buffer - max number of targets to store
-#define TARGET_BLANK 340 //number of initial correlation samples to baseline should be multiple of 4  - at some point make this a function of the pulse amp and type of chirp
+#define BASELINE_SAMPLES 340 //number of initial correlation samples to baseline should be multiple of 4  - at some point make this a function of the pulse amp and type of chirp
+#define BLANK_SAMPLES 60 //number of initial correlation samples to blank  - make this a function of pulse amp
 #define TARGET_THRESHOLD 0
 uint32_t memsbuffer0[SAMPLE_SIZE];
 uint32_t memsbuffer1[SAMPLE_SIZE];
+//int16_t wave[SAMPLE_SIZE];  //used to store the decoded microphone input
 //uint32_t memsbuffer2[SAMPLE_SIZE]; //Not using SPI code for 3rd input
 //uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
 
@@ -162,7 +168,7 @@ int8_t calibrate_count=0;
 
 //Variables that control the chirp
 uint8_t chirp_add=CHIRP_ADD;
-uint32_t chirp_count=CHIRP_COUNT;
+uint32_t chirp_count=(CHIRP_COUNT);
 uint16_t chirp_pulses=CHIRP_PULSES;
 uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;
 uint16_t chirp_len; //size of chirp in 32bit words
@@ -174,7 +180,7 @@ uint16_t target_max=TARGET_MAX;
 //variables that can be changed at run time and will regenerate the chirp and matched filter
 volatile uint8_t new_chirp_flag=1;
 volatile uint8_t new_chirp_add=CHIRP_ADD;
-volatile uint32_t new_chirp_count=CHIRP_COUNT;
+volatile uint32_t new_chirp_count=(CHIRP_COUNT);
 volatile uint16_t new_chirp_pulses=CHIRP_PULSES;
 volatile uint16_t new_chirp_pulses_decay=CHIRP_PULSES_DECAY;
 volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 4095 is 0 to 3.3v at input of amp
@@ -191,7 +197,7 @@ uint16_t timestamp=0; //time stamp used to indicate the frame
 int16_t  corr_calc0,corr_calc1, corr_calc2, corr_calc3;
 int16_t corr0[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
 //int16_t corr1[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
-int16_t baseline_corr0[TARGET_BLANK];
+int16_t baseline_corr0[BASELINE_SAMPLES];
 //int16_t baseline_corr1[TARGET_BLANK];
 
 int32_t corr_DC;
@@ -393,11 +399,27 @@ void I2S_Int(void)
 
 	uint32_t buff0,buff1;
 	//GPIOC_PSOR = PIN_PTC7; //set pin 7
-	I2S0_RCSR|=0x40000; //clear error flag
 
 
 	//buff0 = I2S0_RDR0;
 	//buff1 = I2S0_RDR1;
+
+	/*
+	if( memsbuffer_i<sample_size)
+	{
+		if(I2S0_RCSR & I2S_RCSR_FRF_MASK)
+		{
+		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
+		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
+		memsbuffer_i = memsbuffer_i +1;
+		I2S0_RCSR = I2S0_RCSR | I2S_RCSR_FRF_MASK;
+		}
+
+		if(I2S0_RCSR & I2S_RCSR_FEF_MASK)
+			I2S0_RCSR = I2S0_RCSR | I2S_RCSR_FEF_MASK;
+	}
+
+	*/
 
 	if(memsbuffer_i < (sample_size-4))  //buffer of 5
 	{
@@ -420,7 +442,13 @@ void I2S_Int(void)
 		memsbuffer0[memsbuffer_i]=I2S0_RDR0;
 		memsbuffer1[memsbuffer_i]=I2S0_RDR1;
 		memsbuffer_i = memsbuffer_i +1;
+
+		I2S0_RCSR = I2S0_RCSR | I2S_RCSR_FEF_MASK;
+
 	}
+
+
+
 	else
 	{
 		//disable, reset fifos, turn off interrupts, but keeps bit clock on
@@ -790,7 +818,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 					sign = - sign;  //alternate the sign to simulate the pulse phase change
 					delta_sign=sign_last-sign; //calculate the sign of the term (+2 or -2)
 
-				  	ind=(cum_ct+7)/15;  //calculate the index into the memsbuffer - 60MHz clocked chirp counters and 4MHz input clock yields 60/4 = 15 chirp counts per input bit
+					//calculate the index into the memsbuffer - 60MHz clocked chirp counters and 4MHz input clock yields 60/4 = 15 chirp counts per input bit
+					//add half of that (+7) to shift to more of an averaging rather than int() function
+				  	//ind=(cum_ct+7)/15;
+					ind=(cum_ct+(PIT_CLK/I2S_CLK/2))/(PIT_CLK/I2S_CLK);
 				  	inda = (ind << 16)  |  ((ind & 31) << 8) | (32-(ind & 31));  //encode the index to the 32 bit word as well as bit shift amounts into the array
 
 					if(delta_sign>0)
@@ -828,7 +859,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		  			  calibrate_count = CALIBRATE_COUNT_MAX;
 		  			  target_threshold = TARGET_THRESHOLD;
-			  			for(i=TARGET_BLANK-1; i>=0 ;--i)
+			  			for(i=BASELINE_SAMPLES-1; i>=0 ;--i)
 			  				baseline_corr0[i]=0;
 
 		  			  setamp(0);  //set D to A amplitude to 0
@@ -868,13 +899,14 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 	  //start the chirp and mems microphone data collection
 
-		  memsbuffer_i=0; //reset index used by mems data load interrupt (not needed for DMA)
-
 
 		  //Interrupt driven data load settings
 	      //reset I2S fifo, interrupts, errors, but keeps bit clock on
 	      I2S0_RCSR =  I2S_RCSR_FR_MASK| I2S_RCSR_WSF_MASK| I2S_RCSR_SEF_MASK| I2S_RCSR_FEF_MASK| I2S_RCSR_FWF_MASK| I2S_RCSR_FRF_MASK | I2S_RCSR_BCE_MASK;
 	      //enable I2S receive transfer, interrupts, bit clock on
+
+	      memsbuffer_i=0; //reset index used by mems data load interrupt (not needed for DMA)
+
 	      I2S0_RCSR =  I2S_RCSR_RE_MASK | I2S_RCSR_BCE_MASK | I2S_RCSR_DBGE_MASK | I2S_RCSR_FRIE_MASK;
 
 	      //start SPI read transfer
@@ -1033,7 +1065,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 
-		  		  if(corr_i<TARGET_BLANK-3)  //subtract off baseline
+		  		  if(corr_i<BASELINE_SAMPLES-3)  //subtract off baseline
 		  		  {
 			  		  corr0[corr_i]=corr_calc0-baseline_corr0[corr_i];
 			  		  corr0[corr_i+1]=corr_calc1-baseline_corr0[corr_i+1];
@@ -1059,7 +1091,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if(target_score0 > target_threshold)
+	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1088,7 +1120,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if(target_score0 > target_threshold)
+	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1118,7 +1150,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if(target_score0 > target_threshold)
+	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1146,7 +1178,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 				  corr_i=corr_i+1;
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if(target_score0 > target_threshold)
+	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1212,7 +1244,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		  else if(calibrate==2 && calibrate_count == CALIBRATE_COUNT_MAX)
 		  {
-			 i=TARGET_BLANK;
+			 i=BASELINE_SAMPLES;
 			 while (i>0)
 			 {
 				 i=i-1;
@@ -1228,7 +1260,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		else if( calibrate==2 && calibrate_count >0 )  //capture the baseline for the blanking portion
 		  {
-			 i=TARGET_BLANK;
+			 i=BASELINE_SAMPLES;
 			 while (i>0)
 			 {
 				 i=i-1;
@@ -1508,11 +1540,13 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		  timestamp=timestamp+1;  //increment the timestamp tracking the frame rate
 
+/*
+		  for(j=0; j<sample_size; ++j)
+		  {
+			  wave[j]=SWAR(memsbuffer0[j]);
+		  }
 
-
-
-
-
+*/
 		  if(output_flag==1)
 		  {
 
@@ -1545,10 +1579,11 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 				  //fwrite(target_s,sizeof(target_s[0]),target_max,stdout);
 				  //fwrite(target_s1,sizeof(target_s1[0]),target_max,stdout);
 
-				  //arraywrite(corr0, sample_size, sizeof(corr0[0]));
+				  arraywrite(corr0, sample_size, sizeof(corr0[0]));
+				  //arraywrite(wave, sample_size, sizeof(wave[0]));
 
-			  	  arraywrite(fine_corr0, target_max*64, sizeof(fine_corr0[0][0]));
-				  arraywrite(fine_corr1, target_max*64, sizeof(fine_corr1[0][0]));
+			  	  //arraywrite(fine_corr0, target_max*64, sizeof(fine_corr0[0][0]));
+				  //arraywrite(fine_corr1, target_max*64, sizeof(fine_corr1[0][0]));
 				  arraywrite(target_d,target_max,sizeof(target_d[0]));
 				  arraywrite(target_a,target_max,sizeof(target_a[0]));
 				  arraywrite(target_s,target_max,sizeof(target_s[0]));
