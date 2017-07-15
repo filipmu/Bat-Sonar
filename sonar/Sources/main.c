@@ -130,14 +130,12 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 */
 
 
-//#define CHIRP_COUNT 483
-//#define CHIRP_ADD 16
 
 #define PIT_CLK 60000000 //PIT clock always has frequency of bus clock 60Mhz
 #define I2S_CLK 4000000 //frequency of I2C bit clock, 4Mhz
 #define CHIRP_FREQ 50000 //initial frequency of chirp.  Goes down from here.
 #define CHIRP_COUNT PIT_CLK/2/CHIRP_FREQ //should be PIT_CLK/2/freq .For a 60Mhz PIT clock, 42khz is 714, 40khz is 750, 50khz is 600, 60khz is 500
-#define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave 1=.0166 microsec for 60Mhz PIT Clock
+#define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave a value of  256 changes .0166 microsec for 60Mhz PIT Clock
 #define CHIRP_PULSES 200  //was 64
 #define CHIRP_PULSES_DECAY 200  //used for the matched filter pattern.  Make it slightly larger than CHIRP_PULSES to model the decay of 40kHZ pulses in the piezo
 #define CHIRP_PULSES_DECAY_MAX 1000  //max number of pulses ever expected.
@@ -158,7 +156,7 @@ uint32_t memsbuffer1[SAMPLE_SIZE];
 
 
 volatile uint16_t memsbuffer_i;
-volatile uint16_t chirp_pulses_counter=CHIRP_PULSES;
+
 
 uint8_t state=0;
 uint8_t calibrate=0;
@@ -167,11 +165,15 @@ int8_t calibrate_count=0;
 
 
 //Variables that control the chirp
-uint8_t chirp_add=CHIRP_ADD;
-uint32_t chirp_count=(CHIRP_COUNT);
-uint16_t chirp_pulses=CHIRP_PULSES;
-uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;
+uint32_t chirp_pulse_width[CHIRP_PULSES_DECAY_MAX]  __attribute__((section (".m_data_1FFF0000")));
+uint16_t chirp_pulses_counter __attribute__((section (".m_data_1FFF0000")));
+uint8_t chirp_add;
+uint16_t chirp_count=(CHIRP_COUNT);  //length of first pulse
+uint16_t chirp_pulses=CHIRP_PULSES;  //number of pulses
+uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;  //number of pulses the matched filter uses - can be different than whats emitted to handle decay of sensor
 uint16_t chirp_len; //size of chirp in 32bit words
+
+
 int16_t corr_size_max; //maximum real size of correlation
 uint16_t sample_size=SAMPLE_SIZE;
 uint16_t target_max=TARGET_MAX;
@@ -270,8 +272,9 @@ void PIT0_Int(void)
 	//want to finish around 20khz so 50 usec so 1499+1
 	//so increment by 16
 
-	PIT_LDVAL0 = PIT_LDVAL0 +chirp_add;
 	chirp_pulses_counter = chirp_pulses_counter -1;
+	PIT_LDVAL0 = chirp_pulse_width[chirp_pulses_counter];
+
 	}
 	else
 	{
@@ -787,6 +790,21 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  //calculate new chirp length with buffer to ensure no overflow - buffer should be >4 due to loop with corr_i incrementing 4 times
 
 
+			  /*
+			   * create the chirp pulse table to reflect the characteristics of the chirp desired
+			   */
+
+			  //reset chirp pulses
+			  chirp_pulses_counter = chirp_pulses;
+			  ct=chirp_count;  //start with the number of counts in the first pulse
+			  do
+				  {
+				  chirp_pulses_counter = chirp_pulses_counter -1;
+				  chirp_pulse_width[chirp_pulses_counter] = ct;
+				  ct=ct+chirp_add;
+
+				  }
+			  while(chirp_pulses_counter>0);
 
 			  /*
 			   * initialize the indexing array for the matched filter
@@ -800,7 +818,9 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  //Simulate the PIT counter that is used to generate the linear period chirp, it is a periodic counter that increases in period.
 			  //Clock rate is 60MHz of the counter
 			  //  Input samples from the mems microphones come in at 4MhZ bit rate
-			  ct=chirp_count;  //start with the number of counts in the first pulse
+
+			  chirp_pulses_counter = chirp_pulses-1;  //reset chirp pulses counter
+
 			  cum_ct=0;  //keep track of cumulative counts of simulated PIT counter
 
 			  i_pos=0; // term index for positive terms - we won't store the first term
@@ -811,7 +831,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  i=0;  //keep track of terms will not store first term
 			  for (loop=(chirp_pulses_decay); loop>0 ; --loop)  //loop through and calculate terms for pulses 2,...,chirp_pulses_decay
 			  	{
-					cum_ct=cum_ct+ct; //accumulate the time duration adding the next pulse
+					cum_ct=cum_ct+chirp_pulse_width[chirp_pulses_counter]; //accumulate the time duration adding the next pulse
 
 					//Calculate the next pulse width and signs
 					sign_last = sign;
@@ -835,10 +855,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 						i_neg=i_neg+1;
 
 					}
-
-					ct = ct + chirp_add;  //increase the period of the next pulse by the chirp_add amount
 					i=i+1;
 
+					if(chirp_pulses_counter > 0)  // only go to zero for situations where we want to put decay into the matched filter
+						chirp_pulses_counter = chirp_pulses_counter -1;
 			  	}
 
 			  i_neg=i_neg-1;  //holds the max index for negative terms
@@ -913,11 +933,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 	      //SPI0_MCR = SPI0_MCR & (~SPI_MCR_HALT_MASK);
 
 
-	      //reset counter
-	      PIT_LDVAL0 = chirp_count;
 	      //reset chirp pulses
-	      chirp_pulses_counter = chirp_pulses;
-
+	      chirp_pulses_counter = chirp_pulses-1;
+	      //reset PIT counter
+	      PIT_LDVAL0 = chirp_pulse_width[chirp_pulses_counter];  //set pulse width for first pulse
 	      //enable the PIT0
 	      PIT_TCTRL0 = PIT_TCTRL0 | PIT_TCTRL_TEN_MASK;
 

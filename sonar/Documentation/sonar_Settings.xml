@@ -397,16 +397,16 @@
             <Baud_rate_prescaler v="divide by 2" />
             <Double_baud_rate v="Disabled" />
             <Baud_rate_scaler v="divide by 2" />
-            <DSPI_frequency v="10 MHz" />
+            <DSPI_frequency v="15 MHz" />
             <PCS_to_SCK_delay_prescaler v="divide by 1" />
             <PCS_to_SCK_delay_scaler v="divide by 2" />
-            <PCS_to_SCK_delay v="0.050 us" />
+            <PCS_to_SCK_delay v="0.033 us" />
             <After_SCK_delay_prescaler v="divide by 1" />
             <After_SCK_delay_scaler v="divide by 2" />
-            <After_SCK_delay v="0.050 us" />
+            <After_SCK_delay v="0.033 us" />
             <Delay_after_transfer_prescaler v="divide by 1" />
             <Delay_after_transfer_scaler v="divide by 2" />
-            <Delay_after_transfer v="0.050 us" />
+            <Delay_after_transfer v="0.033 us" />
           </group>
           <Transfer_size v="16" />
           <Clock_polarity v="Low" />
@@ -487,16 +487,16 @@
             <Baud_rate_prescaler v="divide by 5" />
             <Double_baud_rate v="Enabled" />
             <Baud_rate_scaler v="divide by 6" />
-            <DSPI_frequency v="2.667 MHz" />
+            <DSPI_frequency v="4 MHz" />
             <PCS_to_SCK_delay_prescaler v="divide by 1" />
             <PCS_to_SCK_delay_scaler v="divide by 2" />
-            <PCS_to_SCK_delay v="0.050 us" />
+            <PCS_to_SCK_delay v="0.033 us" />
             <After_SCK_delay_prescaler v="divide by 1" />
             <After_SCK_delay_scaler v="divide by 2" />
-            <After_SCK_delay v="0.050 us" />
+            <After_SCK_delay v="0.033 us" />
             <Delay_after_transfer_prescaler v="divide by 1" />
             <Delay_after_transfer_scaler v="divide by 2" />
-            <Delay_after_transfer v="0.050 us" />
+            <Delay_after_transfer v="0.033 us" />
           </group>
           <Transfer_size v="16" />
           <Clock_polarity v="Low" />
@@ -508,16 +508,16 @@
             <Baud_rate_prescaler v="divide by 2" />
             <Double_baud_rate v="Disabled" />
             <Baud_rate_scaler v="divide by 2" />
-            <DSPI_frequency v="10 MHz" />
+            <DSPI_frequency v="15 MHz" />
             <PCS_to_SCK_delay_prescaler v="divide by 1" />
             <PCS_to_SCK_delay_scaler v="divide by 2" />
-            <PCS_to_SCK_delay v="0.050 us" />
+            <PCS_to_SCK_delay v="0.033 us" />
             <After_SCK_delay_prescaler v="divide by 1" />
             <After_SCK_delay_scaler v="divide by 2" />
-            <After_SCK_delay v="0.050 us" />
+            <After_SCK_delay v="0.033 us" />
             <Delay_after_transfer_prescaler v="divide by 1" />
             <Delay_after_transfer_scaler v="divide by 2" />
-            <Delay_after_transfer v="0.050 us" />
+            <Delay_after_transfer v="0.033 us" />
           </group>
           <Transfer_size v="16" />
           <Clock_polarity v="Low" />
@@ -592,16 +592,16 @@
             <Baud_rate_prescaler v="divide by 5" />
             <Double_baud_rate v="Enabled" />
             <Baud_rate_scaler v="divide by 6" />
-            <DSPI_frequency v="2.667 MHz" />
+            <DSPI_frequency v="4 MHz" />
             <PCS_to_SCK_delay_prescaler v="divide by 1" />
             <PCS_to_SCK_delay_scaler v="divide by 2" />
-            <PCS_to_SCK_delay v="0.050 us" />
+            <PCS_to_SCK_delay v="0.033 us" />
             <After_SCK_delay_prescaler v="divide by 1" />
             <After_SCK_delay_scaler v="divide by 2" />
-            <After_SCK_delay v="0.050 us" />
+            <After_SCK_delay v="0.033 us" />
             <Delay_after_transfer_prescaler v="divide by 1" />
             <Delay_after_transfer_scaler v="divide by 2" />
-            <Delay_after_transfer v="0.050 us" />
+            <Delay_after_transfer v="0.033 us" />
           </group>
           <Transfer_size v="16" />
           <Clock_polarity v="Low" />
@@ -613,16 +613,16 @@
             <Baud_rate_prescaler v="divide by 2" />
             <Double_baud_rate v="Disabled" />
             <Baud_rate_scaler v="divide by 2" />
-            <DSPI_frequency v="10 MHz" />
+            <DSPI_frequency v="15 MHz" />
             <PCS_to_SCK_delay_prescaler v="divide by 1" />
             <PCS_to_SCK_delay_scaler v="divide by 2" />
-            <PCS_to_SCK_delay v="0.050 us" />
+            <PCS_to_SCK_delay v="0.033 us" />
             <After_SCK_delay_prescaler v="divide by 1" />
             <After_SCK_delay_scaler v="divide by 2" />
-            <After_SCK_delay v="0.050 us" />
+            <After_SCK_delay v="0.033 us" />
             <Delay_after_transfer_prescaler v="divide by 1" />
             <Delay_after_transfer_scaler v="divide by 2" />
-            <Delay_after_transfer v="0.050 us" />
+            <Delay_after_transfer v="0.033 us" />
           </group>
           <Transfer_size v="16" />
           <Clock_polarity v="Low" />

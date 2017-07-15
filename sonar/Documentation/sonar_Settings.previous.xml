@@ -171,7 +171,7 @@
       <group name="Setttings">
         <Clock_gate v="Enabled" />
         <group name="Clock settings">
-          <Base_clock_frequency v="40 MHz" />
+          <Base_clock_frequency v="60 MHz" />
         </group>
         <Freeze_in_debug_mode v="no" />
       </group>
@@ -179,7 +179,7 @@
         <group name="Channel 0">
           <Timer_0 v="Disabled" />
           <Timer_0_load_value v="999" />
-          <Timer_0_Period v="25 us" />
+          <Timer_0_Period v="16.667 us" />
           <group name="Interrupt">
             <Interrupt v="INT_PIT0" />
             <Interrupt_request v="Enabled" />
@@ -192,7 +192,7 @@
           <Timer_1 v="Disabled" />
           <Timer_1_chain_mode v="Disabled" />
           <Timer_1_load_value v="0" />
-          <Timer_1_Period v="0.025 us" />
+          <Timer_1_Period v="0.017 us" />
           <group name="Interrupt">
             <Interrupt v="INT_PIT1" />
             <Interrupt_request v="&amp;lt;Automatic&amp;gt;" />
@@ -205,7 +205,7 @@
           <Timer_2 v="Disabled" />
           <Timer_2_chain_mode v="Disabled" />
           <Timer_2_load_value v="0" />
-          <Timer_2_Period v="0.025 us" />
+          <Timer_2_Period v="0.017 us" />
           <group name="Interrupt">
             <Interrupt v="INT_PIT2" />
             <Interrupt_request v="&amp;lt;Automatic&amp;gt;" />
@@ -218,7 +218,7 @@
           <Timer_3 v="Disabled" />
           <Timer_3_chain_mode v="Disabled" />
           <Timer_3_load_value v="0" />
-          <Timer_3_Period v="0.025 us" />
+          <Timer_3_Period v="0.017 us" />
           <group name="Interrupt">
             <Interrupt v="INT_PIT3" />
             <Interrupt_request v="&amp;lt;Automatic&amp;gt;" />
@@ -249,14 +249,14 @@
       <group name="Settings">
         <Clock_gate v="Enabled" />
         <group name="Clock setting">
-          <Clock_source v="Core/System clock" />
-          <Clock_multiplier v="multiply by 1" />
-          <Clock_divider v="divide by 1" />
-          <Clock_ratio v="1" />
+          <Clock_source v="OSC0 clock" />
+          <Clock_multiplier v="multiply by 4" />
+          <Clock_divider v="divide by 5" />
+          <Clock_ratio v="1.25" />
           <MCLK_clock_source_direction v="Internal" />
-          <MCLK_out_frequency v="120 MHz" />
+          <MCLK_out_frequency v="40 MHz" />
           <group name="Transmit clock setting">
-            <Clock_source v="Bus_clock" />
+            <Clock_source v="I2S0_MCLK_out" />
             <Bit_clock_divider v="divide by 20" />
             <Bit_clock_source_direction v="Internal" />
             <Bit_clock_frequency v="2 MHz" />
@@ -265,7 +265,7 @@
             <Bit_clock_input v="internal" />
           </group>
           <group name="Receive clock setting">
-            <Clock_source v="Bus_clock" />
+            <Clock_source v="I2S0_MCLK_out" />
             <Bit_clock_divider v="divide by 10" />
             <Bit_clock_source_direction v="Internal" />
             <Bit_clock_frequency v="4 MHz" />
