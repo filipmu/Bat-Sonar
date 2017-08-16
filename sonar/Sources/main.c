@@ -133,8 +133,9 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 
 #define PIT_CLK 60000000 //PIT clock always has frequency of bus clock 60Mhz
 #define I2S_CLK 4000000 //frequency of I2C bit clock, 4Mhz
-#define CHIRP_FREQ 50000 //initial frequency of chirp.  Goes down from here.
-#define CHIRP_COUNT PIT_CLK/2/CHIRP_FREQ //should be PIT_CLK/2/freq .For a 60Mhz PIT clock, 42khz is 714, 40khz is 750, 50khz is 600, 60khz is 500
+#define CHIRP_START_FREQ 50000
+#define CHIRP_END_FREQ 35000
+#define CHIRP_COUNT PIT_CLK/2/CHIRP_FREQ
 #define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave a value of  256 changes .0166 microsec for 60Mhz PIT Clock
 #define CHIRP_PULSES 200  //was 64
 #define CHIRP_PULSES_DECAY 200  //used for the matched filter pattern.  Make it slightly larger than CHIRP_PULSES to model the decay of 40kHZ pulses in the piezo
@@ -167,8 +168,6 @@ int8_t calibrate_count=0;
 //Variables that control the chirp
 uint32_t chirp_pulse_width[CHIRP_PULSES_DECAY_MAX]  __attribute__((section (".m_data_1FFF0000")));
 uint16_t chirp_pulses_counter __attribute__((section (".m_data_1FFF0000")));
-uint8_t chirp_add;
-uint16_t chirp_count=(CHIRP_COUNT);  //length of first pulse
 uint16_t chirp_pulses=CHIRP_PULSES;  //number of pulses
 uint16_t chirp_pulses_decay=CHIRP_PULSES_DECAY;  //number of pulses the matched filter uses - can be different than whats emitted to handle decay of sensor
 uint16_t chirp_len; //size of chirp in 32bit words
@@ -181,8 +180,8 @@ uint16_t target_max=TARGET_MAX;
 
 //variables that can be changed at run time and will regenerate the chirp and matched filter
 volatile uint8_t new_chirp_flag=1;
-volatile uint8_t new_chirp_add=CHIRP_ADD;
-volatile uint32_t new_chirp_count=(CHIRP_COUNT);
+volatile uint32_t new_chirp_start_freq = CHIRP_START_FREQ;
+volatile uint32_t new_chirp_end_freq = CHIRP_END_FREQ;
 volatile uint16_t new_chirp_pulses=CHIRP_PULSES;
 volatile uint16_t new_chirp_pulses_decay=CHIRP_PULSES_DECAY;
 volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 4095 is 0 to 3.3v at input of amp
@@ -230,7 +229,8 @@ int16_t i;  //general index into filter terms
 uint16_t i_neg, i_pos;
 int32_t j,ind,indl,indr;
 int8_t sign,sign_last,delta_sign;
-uint32_t ct, cum_ct,loop;
+uint32_t ct, cum_ct, ct_start,loop;
+int32_t ct_delta;
 
 
 
@@ -775,8 +775,6 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		  if(new_chirp_flag)  //reset chirp data
 		  {
-			  chirp_add=new_chirp_add;
-			  chirp_count=new_chirp_count;
 			  chirp_pulses=new_chirp_pulses;
 			  chirp_pulses_decay=new_chirp_pulses_decay;
 
@@ -796,12 +794,18 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 			  //reset chirp pulses
 			  chirp_pulses_counter = chirp_pulses;
-			  ct=chirp_count;  //start with the number of counts in the first pulse
+
+			  ct_start=PIT_CLK/2/new_chirp_start_freq;  //should be PIT_CLK/2/freq .For a 60Mhz PIT clock, 42khz is 714, 40khz is 750, 50khz is 600, 60khz is 500
+
+			  ct_delta=PIT_CLK/2/new_chirp_end_freq - ct_start;
+
+			  ct=ct_start*chirp_pulses;  //multiply counter by chirp_pulses to avoid numerical rounding
+
 			  do
 				  {
 				  chirp_pulses_counter = chirp_pulses_counter -1;
-				  chirp_pulse_width[chirp_pulses_counter] = ct;
-				  ct=ct+chirp_add;
+				  chirp_pulse_width[chirp_pulses_counter] = ct/chirp_pulses;  //need to divide by chirp_pulses to get right answer
+				  ct=ct+ct_delta;
 
 				  }
 			  while(chirp_pulses_counter>0);
