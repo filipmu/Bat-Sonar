@@ -125,6 +125,16 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
  *
  * Be sure to set compiler optimization to a high setting for performance of code
  *
+ * Adding a way to increase the threshold during the blanking period to avoid false reads close by
+ * collect calibration data to see max size of spurious signal during the blanking time
+ * scale threshold between this and the noise level.
+ *
+ *Adding an array to store the threshold so that it can be varied by distance.  Currently uses 1/d to calculate.
+ *
+ *Need to find a way to scale threshold from a max of around 10x noise threshold to 1x noise threshold over the range of the baseline samples (0-340)
+ *This needs to be done using 1/d formula.  1/y=mx+b  so m=(1/y1-1/y0)/(x1-x0)  and b=1/y0 when x0=0 and x1=340, y0=noise threhold, y1=10xnoise threhold
+ *
+ *
 
 
 */
@@ -145,8 +155,11 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 #define SAMPLE_SIZE 10000  //30ft x 12 in = 360 in.  360in / .053 in/sample ~ 7000.  7000
 #define TARGET_MAX 100 //size of target buffer - max number of targets to store
 #define BASELINE_SAMPLES 340 //number of initial correlation samples to baseline should be multiple of 4  - at some point make this a function of the pulse amp and type of chirp
-#define BLANK_SAMPLES 60 //number of initial correlation samples to blank  - make this a function of pulse amp
 #define TARGET_THRESHOLD 0
+#define THRESHOLD_FACTOR 10 //threshold at 0 distance is scaled by this.
+
+
+
 uint32_t memsbuffer0[SAMPLE_SIZE];
 uint32_t memsbuffer1[SAMPLE_SIZE];
 //int16_t wave[SAMPLE_SIZE];  //used to store the decoded microphone input
@@ -154,6 +167,7 @@ uint32_t memsbuffer1[SAMPLE_SIZE];
 //uint16_t *memsbuffer2_16 = &memsbuffer2;  //pointer to memsbuffer location as a 16 bit for SPI
 
 //volatile uint16_t memsbuffer_i16;  //Not using SPI code for 3rd input
+
 
 
 volatile uint16_t memsbuffer_i;
@@ -185,7 +199,6 @@ volatile uint32_t new_chirp_end_freq = CHIRP_END_FREQ;
 volatile uint16_t new_chirp_pulses=CHIRP_PULSES;
 volatile uint16_t new_chirp_pulses_decay=CHIRP_PULSES_DECAY;
 volatile uint16_t new_pulse_amp=PULSE_AMP;//controls amplitude of chirp 2048 to 4095 is 0 to 3.3v at input of amp
-volatile int16_t target_threshold=TARGET_THRESHOLD;
 volatile uint16_t new_sample_size=SAMPLE_SIZE;
 volatile uint16_t new_target_max = TARGET_MAX;
 
@@ -200,6 +213,12 @@ int16_t corr0[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
 //int16_t corr1[SAMPLE_SIZE] __attribute__((section (".m_data_1FFF0000")));
 int16_t baseline_corr0[BASELINE_SAMPLES];
 //int16_t baseline_corr1[TARGET_BLANK];
+
+//threshold variables
+int16_t target_threshold_level=0;
+int16_t target_threshold0,target_threshold1,target_threshold2,target_threshold3;
+int16_t threshold_profile[BASELINE_SAMPLES];  //array used to store the threshold for target detection from correlation
+
 
 int32_t corr_DC;
 uint16_t corr_i;
@@ -633,26 +652,26 @@ uint8_t SWARx2(uint32_t i)
 uint32_t bit_lookup(uint32_t * a, uint32_t t)
 {
 
- uint32_t wd=t >> 5;  //get starting word
+	uint32_t wd=t >> 5;  //get starting word
 
 
-uint32_t bt=t&31; //get bit for mask
+	uint32_t bt=t&31; //get bit for mask
 
-uint32_t templ,tempr;
+	uint32_t templ,tempr;
 
     // tempr=(a[wd] & maskrt[bt]) >> bt;
 
     // templ=(a[wd+1] & masklt[bt])<< (32-bt);
 
-if (bt==0)
-	return(a[wd]);
-else
-{
-     tempr=(a[wd] ) >> bt;
+	if (bt==0)
+		return(a[wd]);
+	else
+		{
+		tempr=(a[wd] ) >> bt;
 
-     templ=((a[wd+1] )<< (!bt))<<1;
+		templ=((a[wd+1] )<< (!bt))<<1;
 
-     return(tempr | templ);
+		return(tempr | templ);
 }
 
 
@@ -882,7 +901,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  			  calibrate=1;  //first calculate the threshold with 0 output
 
 		  			  calibrate_count = CALIBRATE_COUNT_MAX;
-		  			  target_threshold = TARGET_THRESHOLD;
+		  			  target_threshold0 = TARGET_THRESHOLD;
+		  			  target_threshold1 = TARGET_THRESHOLD;
+		  			  target_threshold2 = TARGET_THRESHOLD;
+		  			  target_threshold3 = TARGET_THRESHOLD;
 			  			for(i=BASELINE_SAMPLES-1; i>=0 ;--i)
 			  				baseline_corr0[i]=0;
 
@@ -891,7 +913,13 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 		  		  if(calibrate ==1 && calibrate_count ==0)
 		  		  {
-		  			target_threshold = target_threshold + target_threshold / 5;  // add 20% safety factor
+		  			//target_threshold_level = target_threshold_level + target_threshold_level / 5;  // add 20% safety factor
+		  			//build out the threshold array
+					//calculate profile so that the 1/y varies from 1 to 10x over the range of baseline samples
+					for(i=0;i<BASELINE_SAMPLES; ++i)
+						threshold_profile[i]=(THRESHOLD_FACTOR*target_threshold_level*256)/(256+(THRESHOLD_FACTOR*256-256)*i/BASELINE_SAMPLES);
+
+
 		  			calibrate = 2;
 		  			setamp(new_pulse_amp);  //set D to A amplitude
 
@@ -899,13 +927,11 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  			calibrate_count = CALIBRATE_COUNT_MAX;
 
 		  		  }
-
-
 		  		  if(calibrate ==2 && calibrate_count ==0)
 		  		  {
-		  			calibrate = 0; //done calibrating
-
+		  			  calibrate=0;
 		  		  }
+
 
 		  //output one on timing pin for mems capture
 		  GPIOC_PSOR= PIN_PTC3;
@@ -1075,16 +1101,16 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 				  a3=(memsbuffer0[corr_i + 4+ ( ind)] << (indl)) | (memsbuffer0[corr_i +3+ (ind)] >> (indr));
 
 
-		  		  cs0=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i]), SWARsimd(a0)),0,cminus0 <<1);
-		  		  cs1=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+1]), SWARsimd(a1)),0,cminus1 <<1);
-		  		  cs2=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+2]), SWARsimd(a2)),0,cminus2 <<1);
-		  		  cs3=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+3]), SWARsimd(a3)),0,cminus3 <<1);
+		  		  cs0=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i]), SWARsimd(a0)),0,cminus0 <<1); //multiply cminus term by 2
+		  		  cs1=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+1]), SWARsimd(a1)),0,cminus1 <<1); //multiply cminus term by 2
+		  		  cs2=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+2]), SWARsimd(a2)),0,cminus2 <<1); //multiply cminus term by 2
+		  		  cs3=__USADA8( __UQADD8(SWARsimd(memsbuffer0[corr_i+3]), SWARsimd(a3)),0,cminus3 <<1); //multiply cminus term by 2
 
 
-		  		  corr_calc0 =(cplus0 <<1)-cs0; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc1 =(cplus1 <<1)-cs1; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc2 =(cplus2 <<1)-cs2; //multiply both first terms by 2 correction for using SWAR that is unsigned
-		  		  corr_calc3 =(cplus3 <<1)-cs3; //multiply both first terms by 2 correction for using SWAR that is unsigned
+		  		  corr_calc0 =(cplus0 <<1)-cs0; //multiply cplus term by 2
+		  		  corr_calc1 =(cplus1 <<1)-cs1; //multiply cplus term by 2
+		  		  corr_calc2 =(cplus2 <<1)-cs2; //multiply cplus term by 2
+		  		  corr_calc3 =(cplus3 <<1)-cs3; //multiply cplus term by 2
 
 
 
@@ -1094,7 +1120,10 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  		  corr0[corr_i+1]=corr_calc1-baseline_corr0[corr_i+1];
 			  		  corr0[corr_i+2]=corr_calc2-baseline_corr0[corr_i+2];
 			  		  corr0[corr_i+3]=corr_calc3-baseline_corr0[corr_i+3];
-
+			  		  target_threshold0=threshold_profile[corr_i];
+			  		  target_threshold1=threshold_profile[corr_i+1];
+			  		  target_threshold2=threshold_profile[corr_i+2];
+			  		  target_threshold3=threshold_profile[corr_i+3];
 		  		  }
 		  		  else
 		  		  {
@@ -1102,19 +1131,17 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  			  corr0[corr_i+1]=corr_calc1;
 		  			  corr0[corr_i+2]=corr_calc2;
 		  			  corr0[corr_i+3]=corr_calc3;
+		  			  target_threshold0=target_threshold_level;
+			  		  target_threshold1=target_threshold_level;
+			  		  target_threshold2=target_threshold_level;
+			  		  target_threshold3=target_threshold_level;
+
 		  		  }
 
 
 
-
-
-
-
-
-
-
 		  	  	  target_score0= corr0[corr_i];
-	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
+	  			  if((target_score0 > target_threshold0) )
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1143,7 +1170,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
+	  			  if((target_score0 > target_threshold1) )
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1173,7 +1200,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
+	  			  if((target_score0 > target_threshold2) )
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1201,7 +1228,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 				  corr_i=corr_i+1;
 
 		  	  	  target_score0= corr0[corr_i];
-	  			  if((target_score0 > target_threshold) && (corr_i>BLANK_SAMPLES))
+	  			  if((target_score0 > target_threshold3) )
 	  			  {
 
 	  					if(target_s[target_i]<=target_score0)
@@ -1256,8 +1283,8 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			  while (i>0)
 			  {
 				  i=i-1;
-				  if(corr0[i]>target_threshold)
-					  target_threshold = corr0[i];
+				  if(corr0[i]>target_threshold_level)
+					  target_threshold_level = corr0[i];
 
 			  }
 			  calibrate_count = calibrate_count -1;
@@ -1295,9 +1322,6 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 			 calibrate_count = calibrate_count -1;
 
 		  }
-
-
-
 
 
 
