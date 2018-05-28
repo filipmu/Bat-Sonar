@@ -134,11 +134,31 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
  *Need to find a way to scale threshold from a max of around 10x noise threshold to 1x noise threshold over the range of the baseline samples (0-340)
  *This needs to be done using 1/d formula.  1/y=mx+b  so m=(1/y1-1/y0)/(x1-x0)  and b=1/y0 when x0=0 and x1=340, y0=noise threhold, y1=10xnoise threhold
  *
- *
+ *Need to add a way to have the calibration occur automatically on first powerup if desired (a setting) - complete
+ *Need to add a forwards/backwards envelope detector (full rectify with low pass smoothing forward and backwards in time and combine results - average?)
+ *Need a way to self-match input with itself.  That way can calculate transfer function in Matlab
 
 
 */
 
+#define CUSTOM_BOARD 1  //comment out when using FRDM-K64
+//uses:
+//PTC0 is trigger in
+//PTC1 can be used as a filtered pulse width output to provide analog out
+//PTC2 can be I/O
+//PTC16 as output to enable 40v regulator
+//PTC17 as right mic select  (make high)
+//PTC18 as left mic select  (make high)
+//ADC0DP1 analog input positive
+//ADC0DN1 analog input negative
+//PTA12, PTA13 is I2C2
+//PTD0-PTD3 is SPI0
+
+
+//LEDs are used in FRDMK64 and custom board
+//PTB22 red LED
+//PTE26 green LED
+//PTB21 blue LED
 
 
 #define PIT_CLK 60000000 //PIT clock always has frequency of bus clock 60Mhz
@@ -681,6 +701,65 @@ uint32_t bit_lookup(uint32_t * a, uint32_t t)
 
 
 
+/**********************************************************
+//figure out the HSV mapping for color - NOTE - THIS IS 8bit code using fixed point - needs to be turned into 32 bit code.
+//http://en.wikipedia.org/wiki/HSL_and_HSV
+//h=hue (angle)
+//s=saturation (0-1)
+//v=value (0-1)
+//htemp=h+32768;
+c= fmulc(v,s);
+
+//hp=(htemp>>7)+ (htemp>>6);
+hp=((h+32768)>>7) +((h+32768)>>6);
+xtemp=(hp & 511) -256;
+if(xtemp<0)
+ xtemp=-xtemp;
+x=fmulc(c,256-xtemp);
+htemp=hp>>8;
+
+switch(htemp)
+ {
+ case 0:
+        redout=c;
+        greenout=x;
+        blueout=0;
+        break;
+ case 1:
+        redout=x;
+        greenout=c;
+        blueout=0;
+        break;
+ case 2:
+        redout=0;
+        greenout=c;
+        blueout=x;
+        break;
+ case 3:
+        redout=0;
+        greenout=x;
+        blueout=c;
+        break;
+ case 4:
+        redout=x;
+        greenout=0;
+        blueout=c;
+        break;
+ case 5:
+        redout=c;
+        greenout=0;
+        blueout=x;
+        break;
+ }
+ redout=faddc(faddc(redout,-c),v);
+ blueout=faddc(faddc(blueout,-c),v);
+ greenout=faddc(faddc(greenout,-c),v);
+
+
+***************************************************************************** */
+
+
+
 void debug_call(int16_t num)
 {
 	if(j==0 || j ==32)
@@ -729,7 +808,73 @@ int main(void)
 	PE_low_level_init();
   /*** End of Processor Expert internal initialization.                    ***/
 
+	GPIOC_PDDR |= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output.
+	GPIOA_PDDR = 0; //set port a as input
 
+
+	//Initialization for the RGB LEDs
+	#define PIN_PTB21 (1<<21)
+	#define PIN_PTB22 (1<<22)
+	#define PIN_PTE26 (1<<26)
+
+	SIM_SCGC5 |= (SIM_SCGC5_PORTB_MASK | SIM_SCGC5_PORTE_MASK);  //turn on the clock for the GPIO ports
+	//set up the LED output pins
+	GPIOB_PSOR = (PIN_PTB21| PIN_PTB22); //set output to high (LED off)
+	GPIOE_PSOR = PIN_PTE26; //set output to high (LED off)
+
+
+	GPIOB_PDDR |=  (PIN_PTB21 | PIN_PTB22);  //set as outputs
+	GPIOE_PDDR |=  PIN_PTE26 ;//set as output
+	PORTB_PCR21 |= (PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK | PORT_PCR_SRE_MASK);// set as GPIO and set drive strength to high and slew rate to low
+	PORTB_PCR22 |= (PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK | PORT_PCR_SRE_MASK);// set as GPIO and set drive strength to high and slew rate to low
+	PORTE_PCR26 |= (PORT_PCR_MUX(1) | PORT_PCR_DSE_MASK | PORT_PCR_SRE_MASK);// set as GPIO and set drive strength to high and slew rate to low
+
+	//GPIOB_PCOR = PIN_PTB22; //turn on red LED
+	//GPIOB_PSOR = PIN_PTB22; //turn off red LED
+
+	//GPIOB_PCOR = PIN_PTB21; //turn on blue LED
+	//GPIOB_PSOR = PIN_PTB21; //turn off blue LED
+
+	//GPIOE_PCOR = PIN_PTE26; //turn on green LED
+	//GPIOE_PSOR = PIN_PTE26; //turn off green LED
+
+
+#ifdef CUSTOM_BOARD
+	//in addition to pins used on \FRDM K64 the custom board uses:
+	//PTC0 is trigger in
+	//PTC1 can be used as a filtered pulse width output to provide analog out
+	//PTC2 can be I/O
+	//PTC16 as output to enable 40v regulator
+	//PTC17 as right mic select  (make high)
+	//PTC18 as left mic select  (make high)
+	//PTB22 red LED
+	//PTE26 green LED
+	//PTB21 blue LED
+	//ADC0DP1 analog input positive
+	//ADC0DN1 analog input negative
+	//PTA12, PTA13 is I2C2
+	//PTD0-PTD3 is SPI0
+	#define PIN_PTC16 (1<<16)
+	#define PIN_PTC17 (1<<17)
+	#define PIN_PTC18 (1<<18)
+
+
+	SIM_SCGC5 |= (SIM_SCGC5_PORTC_MASK);  //turn on the clock for the GPIO ports
+
+	//set up PTC for enable pins
+	GPIOC_PCOR = (PIN_PTC16 | PIN_PTC17 | PIN_PTC18);  //clear output values
+
+	GPIOC_PDDR |=  (PIN_PTC16 | PIN_PTC17 | PIN_PTC18) ;  //set as outputs
+	PORTC_PCR16 |= PORT_PCR_MUX(1);// set as GPIO
+	PORTC_PCR17 |= PORT_PCR_MUX(1);// set as GPIO
+	PORTC_PCR18 |= PORT_PCR_MUX(1);// set as GPIO
+
+	GPIOC_PSOR = (PIN_PTC16 | PIN_PTC17 | PIN_PTC18); //set output values to enable 40v supply and mics
+
+
+
+
+#endif
 
   //Enable the DAC
 
@@ -771,8 +916,7 @@ int main(void)
 state=0;
 count=0;
 
-GPIOC_PDDR= PIN_PTC2 | PIN_PTC3 | PIN_PTC7;  //set port data direction to output.
-GPIOA_PDDR=0; //set port a as input, for switch SW3
+
 
 
   for(;;){
@@ -896,8 +1040,9 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 
 
 		  //check for button press and if so set calibrate flag
-		  		  if( (Bit1_GetVal() ==0) && (calibrate==0) )  //SW2 pressed on board
+		  		  if( ((Bit1_GetVal() ==0) || count ==5 )&& (calibrate==0) )  //SW2 pressed on board or 5 cycles have passed
 		  		  	  {
+		  			  GPIOB_PCOR = PIN_PTB21; //turn on blue LED
 		  			  calibrate=1;  //first calculate the threshold with 0 output
 
 		  			  calibrate_count = CALIBRATE_COUNT_MAX;
@@ -930,6 +1075,7 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  		  if(calibrate ==2 && calibrate_count ==0)
 		  		  {
 		  			  calibrate=0;
+		  			  GPIOB_PSOR = PIN_PTB21; //turn off blue LED
 		  		  }
 
 
@@ -1642,6 +1788,9 @@ GPIOA_PDDR=0; //set port a as input, for switch SW3
 		  }
 
 		  	  state=0;
+
+		  	  if (count<254)
+		  		  count=count+1;
 
 /*
 		  if (count<2)

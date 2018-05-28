@@ -59,6 +59,51 @@ extern "C" {
 void Cpu_OnNMI(void);
 
 
+/*
+** ===================================================================
+**     Event       :  Cpu_OnHardFault (module Events)
+**
+**     Component   :  Cpu [MK64FN1M0LL12]
+*/
+/*!
+**     @brief
+**         This event is called when the Hard Fault exception had
+**         occurred. This event is automatically enabled when the [Hard
+**         Fault] property is set to 'Enabled'.
+*/
+/* ===================================================================*/
+void Cpu_OnHardFault(void);
+
+/*
+** ===================================================================
+**     Event       :  Cpu_OnSupervisorCall (module Events)
+**
+**     Component   :  Cpu [MK64FN1M0LL12]
+*/
+/*!
+**     @brief
+**         This event is called when the Supervisor Call exception had
+**         occurred. This event is automatically enabled when the
+**         [Supervisor Call] property is set to 'Enabled'.
+*/
+/* ===================================================================*/
+void Cpu_OnSupervisorCall(void);
+
+/*
+** ===================================================================
+**     Event       :  Cpu_OnPendableService (module Events)
+**
+**     Component   :  Cpu [MK64FN1M0LL12]
+*/
+/*!
+**     @brief
+**         This event is called when the Pendable Service exception had
+**         occurred. This event is automatically enabled when the
+**         [Pendable Service] property is set to 'Enabled'.
+*/
+/* ===================================================================*/
+void Cpu_OnPendableService(void);
+
 /* END Events */
 
 #ifdef __cplusplus

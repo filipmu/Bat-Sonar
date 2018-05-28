@@ -95,7 +95,7 @@
     <Compiler v="GNU C Compiler" />
     <CompilerProperties>
       <Compiler v="GNU C Compiler" />
-      <enumgroup name="Unhandled vectors" v="One handler for all">
+      <enumgroup name="Unhandled vectors" v="Own handler for every">
         <EmptySection_DummyValue />
       </enumgroup>
       <boolgroup name="Generate debugger files" v="no" />
