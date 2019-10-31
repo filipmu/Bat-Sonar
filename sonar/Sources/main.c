@@ -135,9 +135,12 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
  *This needs to be done using 1/d formula.  1/y=mx+b  so m=(1/y1-1/y0)/(x1-x0)  and b=1/y0 when x0=0 and x1=340, y0=noise threhold, y1=10xnoise threhold
  *
  *Need to add a way to have the calibration occur automatically on first powerup if desired (a setting) - complete
- *Need to add a forwards/backwards envelope detector (full rectify with low pass smoothing forward and backwards in time and combine results - average?)
+ *Envelope detector - full rectification and rectangular window of 5 samples - in progress
+ *Peak detector - see http://www.billauer.co.il/peakdet.html
+ *Need to find a way to handle inverse peaks - what does this mean? Find exact peak within the 5 samples- needs to be positive, before the rectification?
  *Need a way to self-match input with itself.  That way can calculate transfer function in Matlab
 
+ *
 
 */
 
@@ -163,8 +166,8 @@ __attribute__((always_inline)) __STATIC_INLINE uint32_t __RBIT(uint32_t value)
 
 #define PIT_CLK 60000000 //PIT clock always has frequency of bus clock 60Mhz
 #define I2S_CLK 4000000 //frequency of I2C bit clock, 4Mhz
-#define CHIRP_START_FREQ 50000
-#define CHIRP_END_FREQ 35000
+#define CHIRP_START_FREQ 44000
+#define CHIRP_END_FREQ 36000
 #define CHIRP_COUNT PIT_CLK/2/CHIRP_FREQ
 #define CHIRP_ADD 1 //was 1  controls the amount of period length after each half wave a value of  256 changes .0166 microsec for 60Mhz PIT Clock
 #define CHIRP_PULSES 200  //was 64
@@ -243,7 +246,7 @@ int16_t threshold_profile[BASELINE_SAMPLES];  //array used to store the threshol
 int32_t corr_DC;
 uint16_t corr_i;
 
-
+int16_t intest,outtest;
 
 int32_t cs0,cs1, cs2, cs3;
 int32_t cplus0,cplus1,cplus2,cplus3;
@@ -251,6 +254,14 @@ int32_t cminus0,cminus1,cminus2,cminus3;
 uint32_t a0,a1,a2,a3;
 
 int32_t a,b,c;
+
+int32_t acc; //variable used to accumulate boxcar filter
+
+//variables used for peak detection
+uint16_t mxpos,mnpos,lookformax;
+int16_t mx,mn;
+
+
 
 uint8_t count;
 
@@ -759,6 +770,46 @@ switch(htemp)
 ***************************************************************************** */
 
 
+/*fast arm function to return ABS value
+ * See https://community.arm.com/processors/f/discussions/6636/how-to-get-absolute-value-of-a-32-bit-signed-integer-as-fast-as-possible
+ */
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t myAbs32(int32_t parVal)
+{
+    int32_t wResult;
+
+    /* Take opposite of value and test value in the process */
+    wResult = -parVal;
+
+    if (wResult < 0)
+    {
+        /* result is negative, that means :
+        - parVal is positive : following operation will subtract 0 to parVal
+        - parVal is 0x80000000 : following operation will subtract 1 to parVal => 0x7FFFFFFF */
+        wResult = parVal - (((uint32_t)parVal) >> 31);
+    }
+    /* else result is positive, that means that parVal is negative, nothing else to do */
+    return wResult;
+}
+
+/*Hopefully fast arm function to return max(0,x) value
+ *
+ */
+__attribute__( ( always_inline ) ) __STATIC_INLINE int32_t myMax0(int32_t parVal)
+{
+    //int32_t wResult;
+
+
+
+    if (parVal < 0)
+    {
+        /* result is negative
+        - parVal is positive : following operation will subtract 0 to parVal
+        - parVal is 0x80000000 : following operation will subtract 1 to parVal => 0x7FFFFFFF */
+       return 0;
+    }
+    /* else result is positive, that means that parVal is negative, nothing else to do */
+    return parVal;
+}
 
 void debug_call(int16_t num)
 {
@@ -813,6 +864,9 @@ int main(void)
 
 
 	//Initialization for the RGB LEDs
+	//PTB22 red LED
+	//PTE26 green LED
+	//PTB21 blue LED
 	#define PIN_PTB21 (1<<21)
 	#define PIN_PTB22 (1<<22)
 	#define PIN_PTE26 (1<<26)
@@ -847,9 +901,7 @@ int main(void)
 	//PTC16 as output to enable 40v regulator
 	//PTC17 as right mic select  (make high)
 	//PTC18 as left mic select  (make high)
-	//PTB22 red LED
-	//PTE26 green LED
-	//PTB21 blue LED
+
 	//ADC0DP1 analog input positive
 	//ADC0DN1 analog input negative
 	//PTA12, PTA13 is I2C2
@@ -915,6 +967,7 @@ int main(void)
 
 state=0;
 count=0;
+
 
 
 
@@ -1035,7 +1088,9 @@ count=0;
 			  corr_size_max = sample_size-chirp_len;
 			  new_chirp_flag=0;
 
-		  }
+			  count=0; //reset the counter to restart automatic calibration
+
+		  }//end if new chirp flag
 
 
 
@@ -1124,6 +1179,7 @@ count=0;
 
 
 	      state=2;
+	      acc=0;  //clear the accumulator for the boxcar filter
 
 	  }
 
@@ -1260,6 +1316,7 @@ count=0;
 
 
 
+
 		  		  if(corr_i<BASELINE_SAMPLES-3)  //subtract off baseline
 		  		  {
 			  		  corr0[corr_i]=corr_calc0-baseline_corr0[corr_i];
@@ -1285,6 +1342,262 @@ count=0;
 		  		  }
 
 
+		  		if (calibrate==0)  //only do post processing if calibration is not occurring
+		  		{
+			  		corr0[corr_i]=myMax0(corr0[corr_i]);
+			  		corr0[corr_i+1]=myMax0(corr0[corr_i+1]);
+			  		corr0[corr_i+2]=myMax0(corr0[corr_i+2]);
+			  		corr0[corr_i+3]=myMax0(corr0[corr_i+3]);
+
+
+			  		//corr_i goes up by 4's so 0,4,8
+
+			  		if(corr_i==0)
+			  			{
+			  			//initial conditions for boxcar filtering
+			  			acc=corr0[0]+corr0[1]+corr0[2]+corr0[3];
+
+			  			//initial conditions for peak determination
+			  			mx=acc;
+			  			mn=acc;
+			  			mxpos=0;
+			  			mnpos=0;
+			  			lookformax=1;
+
+			  			}
+
+			  		else  //corr_i is 4,8,...
+
+			  		{
+			  		acc=acc+corr0[corr_i];
+			  		acc=acc-corr0[corr_i-4];
+			  		corr0[corr_i-4]=acc/8;  //scale down to fit back into an int
+
+			  		acc=acc+corr0[corr_i+1];
+			  		acc=acc-corr0[corr_i-3];
+			  		corr0[corr_i-3]=acc/8;
+
+			  		acc=acc+corr0[corr_i+2];
+			  		acc=acc-corr0[corr_i-2];
+			  		corr0[corr_i-2]=acc/8;
+
+			  		acc=acc+corr0[corr_i+3];
+			  		acc=acc-corr0[corr_i-1];
+			  		corr0[corr_i-1]=acc/8;
+			  		}
+
+
+			  		/*peak detection
+			  		 *  http://www.billauer.co.il/peakdet.html
+			  		 */
+
+			  		if (lookformax != 2)  //check if we filled our peak buffer
+			  		{
+						if(corr0[corr_i]>mx)
+						{
+							mx=corr0[corr_i];
+							mxpos=corr_i;
+						}
+
+						if(corr0[corr_i]<mn)
+						{
+							mn=corr0[corr_i];
+							mnpos=corr_i;
+						}
+
+						if (lookformax)
+						{
+							if (corr0[corr_i]< (mx-target_threshold0))
+							{
+
+								lookformax=0;
+								target_s[target_i]=mx;
+								target_d[target_i]=mxpos+2;//take into account the shift when doing the boxcar smoothing
+
+								if(target_i ==0)
+									lookformax=2;  //flag that we are done finding all the maxes
+								else
+									target_i=target_i-1;
+
+								mn=corr0[corr_i];
+								mnpos=corr_i;
+
+
+							}
+						}
+						else
+						{
+							if (corr0[corr_i]> (mn+target_threshold0))
+							{
+								//not saving minimums
+								mx=corr0[corr_i];
+								mxpos=corr_i;
+								lookformax=1;
+							}
+
+						}
+			  		}
+			  		corr_i=corr_i+1;
+
+			  		if (lookformax != 2)  //check if we filled our peak buffer
+			  		{
+						if(corr0[corr_i]>mx)
+						{
+							mx=corr0[corr_i];
+							mxpos=corr_i;
+						}
+
+						if(corr0[corr_i]<mn)
+						{
+							mn=corr0[corr_i];
+							mnpos=corr_i;
+						}
+
+						if (lookformax)
+						{
+							if (corr0[corr_i]< (mx-target_threshold1))
+							{
+
+								lookformax=0;
+								target_s[target_i]=mx;
+								target_d[target_i]=mxpos+2;//take into account the shift when doing the boxcar smoothing
+
+								if(target_i ==0)
+									lookformax=2;  //flag that we are done finding all the maxes
+								else
+									target_i=target_i-1;
+
+								mn=corr0[corr_i];
+								mnpos=corr_i;
+
+
+							}
+						}
+						else
+						{
+							if (corr0[corr_i]> (mn+target_threshold1))
+							{
+								//not saving minimums
+								mx=corr0[corr_i];
+								mxpos=corr_i;
+								lookformax=1;
+							}
+
+						}
+			  		}
+			  		corr_i=corr_i+1;
+
+
+			  		if (lookformax != 2)  //check if we filled our peak buffer
+			  		{
+						if(corr0[corr_i]>mx)
+						{
+							mx=corr0[corr_i];
+							mxpos=corr_i;
+						}
+
+						if(corr0[corr_i]<mn)
+						{
+							mn=corr0[corr_i];
+							mnpos=corr_i;
+						}
+
+						if (lookformax)
+						{
+							if (corr0[corr_i]< (mx-target_threshold2))
+							{
+
+								lookformax=0;
+								target_s[target_i]=mx;
+								target_d[target_i]=mxpos+2;//take into account the shift when doing the boxcar smoothing
+
+								if(target_i ==0)
+									lookformax=2;  //flag that we are done finding all the maxes
+								else
+									target_i=target_i-1;
+
+								mn=corr0[corr_i];
+								mnpos=corr_i;
+
+
+							}
+						}
+						else
+						{
+							if (corr0[corr_i]> (mn+target_threshold2))
+							{
+								//not saving minimums
+								mx=corr0[corr_i];
+								mxpos=corr_i;
+								lookformax=1;
+							}
+
+						}
+			  		}
+			  		corr_i=corr_i+1;
+			  		if (lookformax != 2)  //check if we filled our peak buffer
+			  		{
+						if(corr0[corr_i]>mx)
+						{
+							mx=corr0[corr_i];
+							mxpos=corr_i;
+						}
+
+						if(corr0[corr_i]<mn)
+						{
+							mn=corr0[corr_i];
+							mnpos=corr_i;
+						}
+
+						if (lookformax)
+						{
+							if (corr0[corr_i]< (mx-target_threshold3))
+							{
+
+								lookformax=0;
+								target_s[target_i]=mx;
+								target_d[target_i]=mxpos+2;//take into account the shift when doing the boxcar smoothing
+
+								if(target_i ==0)
+									lookformax=2;  //flag that we are done finding all the maxes
+								else
+									target_i=target_i-1;
+
+								mn=corr0[corr_i];
+								mnpos=corr_i;
+
+
+							}
+						}
+						else
+						{
+							if (corr0[corr_i]> (mn+target_threshold3))
+							{
+								//not saving minimums
+								mx=corr0[corr_i];
+								mxpos=corr_i;
+								lookformax=1;
+							}
+
+						}
+			  		}
+			  		corr_i=corr_i+1;
+
+
+
+
+
+
+		  		}
+		  		else  //calibrating
+		  		{
+		  			corr_i=corr_i+4;
+		  		}
+
+
+
+
+		  		  /* Debug
 
 		  	  	  target_score0= corr0[corr_i];
 	  			  if((target_score0 > target_threshold0) )
@@ -1401,6 +1714,10 @@ count=0;
 
 				  corr_i=corr_i+1;
 
+				  Debug */
+
+		  		  //corr_i=corr_i+4;
+
 		  	  	  }
 		  	  	  }
 				  while(corr_i < corr_size_max);  //check if we have processed the whole mems buffer
@@ -1472,7 +1789,7 @@ count=0;
 
 
 		  //do some post processing
-		  //fine grain correlation for microphone 0
+		  //fine grain correlation for microphone 0 and 1
 
 		 // GPIOC_PSOR = PIN_PTC7; //set pin 7
 		  target_i=target_max-1;
@@ -1772,11 +2089,13 @@ count=0;
 				  //fwrite(target_s,sizeof(target_s[0]),target_max,stdout);
 				  //fwrite(target_s1,sizeof(target_s1[0]),target_max,stdout);
 
+			  	 //Next line is used for ultrasonic2.m script in Octave
 				  arraywrite(corr0, sample_size, sizeof(corr0[0]));
-				  //arraywrite(wave, sample_size, sizeof(wave[0]));
 
+				  //Next two lines are used for ultrasonic3.m script in Octave
 			  	  //arraywrite(fine_corr0, target_max*64, sizeof(fine_corr0[0][0]));
 				  //arraywrite(fine_corr1, target_max*64, sizeof(fine_corr1[0][0]));
+
 				  arraywrite(target_d,target_max,sizeof(target_d[0]));
 				  arraywrite(target_a,target_max,sizeof(target_a[0]));
 				  arraywrite(target_s,target_max,sizeof(target_s[0]));
