@@ -11,6 +11,6 @@ This video shows the sensor in action.  The left graph shows the identified targ
 ## How it works
 The approach works natively on the 1-bit PDM output of MEMS microphones.  Since the sample rate is 4MHz, very accurate phase comparison can be done. This approach takes advantage of how the cross correlation problem simplifies when its matching a simple square wave chirp with a 1-bit PDM stream. In this case its a sum of delays with terms reflecting the signal level changes in the chirp  and delays reflecting the length of each pulse in the chirp.  This reduces the computational complexity significantly.  Note that its done in the time domain, not using the FFT as is typical with higher resolution digital samples.  The Cortex M4 has SIMD (Single Instruction Multiple Data) and DSP instructions that I carefully tuned to maximize computation speed. The theory is in this paper: :http://www.kurosawa.ip.titech.ac.jp/publications/papers/ieice08sh.pdf
  
- A description of how it works can be found at :https://hackaday.io/project/29512-bat-sonar/details
+ A much more detailed description of how it works can be found at :https://hackaday.io/project/29512-bat-sonar/details
 
 
