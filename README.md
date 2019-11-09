@@ -3,9 +3,7 @@ Bat like sonar sensor that can track multiple targets and estimate angle of arri
 
 Code for a ARM Cortex signal processing project I completed and published on hackaday.io.
 
-
-![picture](https://github.com/filipmu/Bat-Sonar/blob/master/images/labelled%20picture.png?auto=compress%2Cformat&w=100&h=67&fit=min)
-
+<img src="https://github.com/filipmu/Bat-Sonar/blob/master/images/labelled%20picture.png" width="600" height="auto" />
 
 Video of the sonar in action: https://vimeo.com/250041155
 
